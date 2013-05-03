@@ -38,9 +38,31 @@ Finally, notice how proficient you are in your production code? That comes from 
 [^2]: as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example
 
 
+Method names should tell a story
+--------------------------------
 
-Stuff to work on:
-names should start with 'can' or 'should'
+There is actually dome (healthy) debate on how to name your test methods in a unit test class. My preference is to let my method names tell me a story. For this, I like my method names to start with a verb that lets me describe what will be tested, in functional terms if possible.
+
+For example, here is a method:
+    public class LocalBusinessResourceTest {
+        @Test
+        public void should_limit_the_number_search_matches_to_20_by_default() {
+            ...
+        }
+    }
+
+What I read, half-unconsciously, is "The class LocalBusinessResource should limit the number of search matches to 20, by default." The test itself will lay the technical details, and I'll make sure that the figure "20" will appear somewhere, in order to make the whole thing as obvious as possible. However, the method name tells me the general functional contract, and will avoid detailing the implementation (although I'll admit we are getting close).
+
+Starting with "should" or "can" helps in this regard. Some authors advocate starting with ["fact"](https://github.com/marick/Midje) or following a [UnitOfWork\_StateUnderTest\_ExpectedBehavior](http://osherove.com/blog/2005/4/3/naming-standards-for-unit-tests.html) pattern. I feel it makes the flow of the story less natural, though.
+
+One drawback of this style is that method names are longer than is usual. I have never found this to be an issue in practice. Only on rare occasions do the names reach more than 100, which is very acceptable.
+
+For more about using "should", check out some of Liz Keogh's posts, such as [this one](http://lizkeogh.com/2005/03/14/the-should-vs-will-debate-or-why-doubt-is-good/).
+
+
+
+Stuff to work on
+================
 tests should have a cyclomatic complexity of 1 avoid loops
 duplicate code (sparingly)
 use local static varargs methods as builder methods
@@ -56,3 +78,4 @@ use factory classes to mock types instantiated in your production code
 avoid sub-blocks (check exception details with https://code.google.com/p/catch-exception/)
 hide unnecessary details (with nulls if necessary)
 do not use BDD/integration tests frameworks for unit testing
+use assertion libraries
