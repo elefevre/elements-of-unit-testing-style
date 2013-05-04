@@ -177,13 +177,20 @@ As an alternative, I tend to put some things as initialization of instance varia
     	...
     }
 
+
+Keep as much context as possible within your test method
+--------------------------------------------------------
+
+If you apply all the above tips, you will naturally find much code in your actual test methods. This is a good thing. As much as possible, everything your test needs should be right there in the test method. No hidden behavior. No magic scurrying around finding other pieces of context. No looking for external resource files directly loaded from the file system.
+
+If your test method ends up being too long for your taste (how much is too long for a test method? 10 lines? 20?), then consider this a smell, not in your tests, but rather in your production code. Should split responsabilities among more classes? Tranform helper classes into mocked services?
+
+This goal is very achievable in unit tests. However, I've found them a lot harder in my integration tests, and many of them end up inheriting from rather complex abstract classes. It is still an ideal that you should keep in mind, though.
+
 Stuff to work on
 ================
-keep as much context as possible within your test method
 use local static varargs methods as builder methods
 inline test values
-instantiate your class under test as an instance variable
-instantiate your mocks as instance variables
 do not use logs
 avoid annotations in your tests, except for @Test
 mock types that you do not control (sometimes)
