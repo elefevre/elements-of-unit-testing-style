@@ -60,10 +60,55 @@ One drawback of this style is that method names are longer than is usual. I have
 For more about using "should", check out some of Liz Keogh's posts, such as [this one](http://lizkeogh.com/2005/03/14/the-should-vs-will-debate-or-why-doubt-is-good/).
 
 
+Tests should have no branches
+-----------------------------
+# avoid loops, try/catch clauses
+As opposed to production code, tests describe a straight story. What things we start with, what we do with them, and what we get (some call this the Given/When/Then pattern, or the *XXXXXX* Act Assert). This means that the code would be written as a single branch that can be read with as little mental effort as possible.
+
+Although it might seem obvious in simple cases, it also means that, for example, you should avoid loops when initializing your test data:
+
+    public void can_limit_search_results_to_5()
+    {
+    	// I recommend this over loops
+        List<String> list = new ArrayList<String>();
+        list.add("string");
+        list.add("string");
+        list.add("string");
+        list.add("string");
+        list.add("string"); // 5
+        list.add("string"); // 6
+        
+        assertThat(search.findByName("")).hasSize(6);
+    }
+
+Similarly, avoid try/catch clauses. In older versions of JUnit, making sure that an exception was thrown meant writing code like this:
+
+    public void can_fail_when_searching_on_an_invalid_name() {
+        try {
+            search.findByName("an invalid name");
+            fail();
+        }
+        catch (RuntimeException e) {
+            // success
+        }
+    }
+
+Since JUnit 4.0, this can be refactored as:
+    @Test(expected = RuntimeException.class)
+    public void can_limit_search_results_to_ten() {
+        search.findByName("an invalid name");
+    }
+This has the added benefit of a more explicit error message.
+
+What of you need to check the content of the exception message? JUnit 4 does offer a mecanism for this, but I find it a little cumbersome *REFERENCE*. I prefer the *GOOGLE CODE PROJECT EXCEPTION*:
+
+    *CODE SAMPLE*
+
+
+
 
 Stuff to work on
 ================
-tests should have a cyclomatic complexity of 1 avoid loops
 duplicate code (sparingly)
 use local static varargs methods as builder methods
 avoid calling test methods from other test methods, even for setup
