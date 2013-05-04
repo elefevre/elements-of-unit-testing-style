@@ -249,12 +249,13 @@ _XXXXXXXXXXXXXXXXXXX_
 
 Stuff to work on
 ================
-use local static varargs methods as builder methods
-inline test values
-do not use logs
-mock types that you do not control (sometimes)
-use factory classes to mock types instantiated in your production code
-hide unnecessary values (with nulls if necessary)
-do not use BDD/integration tests frameworks for unit testing
-use assertion libraries
-private? final? instance variables
+
+* use local static varargs methods as builder methods
+* inline test values
+* do not use logs
+* mock types that you do not control (sometimes)
+* use factory classes to mock types instantiated in your production code
+* hide unnecessary values (with nulls if necessary)
+* do not use BDD/integration tests frameworks for unit testing
+* use assertion libraries
+* private? final? instance variables
