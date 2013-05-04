@@ -158,11 +158,29 @@ Some people like to have an initial unit test that sets things up, and checks fo
 
 I am very much against this technique, as it makes a lot less clear what is being tested, and what might actually break. My preference goes to duplicating code. If it seems too painful to do so, then it is probably a sign that production code should be refactored. Only at the last resort would I start to factorize initialization code into a separate methods. Never would I call another test.
 
+
+Reduce reliance on setup/teardown methods
+---------------------------------------------
+
+JUnit provides optional @Before/@After annotations to mark some methods for running before or after all other test methods (there are also @BeforeClass/@AfterClass that will be run just once, before or after all other test methods). These used to be know as the setUp() and tearDown() methods in previous versions of JUnit.
+
+Any code in there is code that won't be considered when reading a test. And, if read, might also break the flow of reading the story told by the test. As much as possible, do not use those methods.
+
+As an alternative, I tend to put some things as initialization of instance variables, usually simply the instanciation of the class under test, plus sometimes initialization of a few mock objects. Initialization of instance variables is a lot more limiting than code in methods, and that's partly the point. Code there (code common to all test methods) should be glaringly simple. If I'm forced to move things to the @Before method (because initialization requires complex manipulation), then it is a code smell.
+
+    Geocoder geocoder = mock(Geocoder.class);
+    PointOfInterests pois = mock(PointOfInterests.class);
+    ResourceLoader loader = new ResourceLoader(geocoder, pois);
+
+    @Test
+    public void should_produce_an_error_when_city_and_postal_code_are_unspecified() {
+    	...
+    }
+
 Stuff to work on
 ================
+keep as much context as possible within your test method
 use local static varargs methods as builder methods
-avoid calling test methods from other test methods, even for setup
-avoid using the setup/teardown methods
 inline test values
 instantiate your class under test as an instance variable
 instantiate your mocks as instance variables
@@ -174,3 +192,4 @@ avoid sub-blocks (check exception details with https://code.google.com/p/catch-e
 hide unnecessary details (with nulls if necessary)
 do not use BDD/integration tests frameworks for unit testing
 use assertion libraries
+private? final? instance variables
