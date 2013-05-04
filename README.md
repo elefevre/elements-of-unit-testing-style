@@ -101,7 +101,7 @@ Since JUnit 4.0, this can be refactored as:
     }
 This has the added benefit of a more explicit error message.
 
-What of you need to check the content of the exception message? JUnit 4 does offer a mecanism for this, but I find it a little cumbersome *REFERENCE*. I prefer the *GOOGLE CODE PROJECT EXCEPTION*:
+What of you need to check the content of the exception message? JUnit 4 does offer a mechanism for this, but I find it a little cumbersome *REFERENCE*. I prefer the [catch exception library](https://code.google.com/p/catch-exception/):
 
     *CODE SAMPLE*
 
@@ -221,8 +221,31 @@ If you apply all the above tips, you will naturally find much code in your actua
 
 If your test method ends up being too long for your taste (how much is too long for a test method? 10 lines? 20?), then consider this a smell, not in your tests, but rather in your production code. Should split responsabilities among more classes? Tranform helper classes into mocked services?
 
-This goal is very achievable in unit tests. However, I've found them a lot harder in my integration tests, and many of them end up inheriting from rather complex abstract classes. It is still an ideal that you should keep in mind, though.
+This goal is very much achievable in unit tests. However, I've found them a lot harder in my integration tests, and many of them end up inheriting from rather complex abstract classes. It is still an ideal that you should keep in mind, though.
 
+
+Inline test values
+------------------
+
+In production code, it is recommend to extract local variables to make their usage clearer.
+
+    isAllowedToDrink(currentYear - yearOfBirth);
+
+    // this version is easier to understand
+    int age = currentYear - yearOfBirth;
+    isAllowedToDrink(age);
+
+By the same token, test values are frequently extracted to local variables.
+
+    String name = "very long name that might ";
+    
+    store.createUserWithName(name);
+    
+    assertThat(store.findByName(name).getName()).isEqualTo("Eric");
+
+I do not believe this makes code easier to read.
+
+_XXXXXXXXXXXXXXXXXXX_
 
 Stuff to work on
 ================
@@ -231,8 +254,7 @@ inline test values
 do not use logs
 mock types that you do not control (sometimes)
 use factory classes to mock types instantiated in your production code
-avoid sub-blocks (check exception details with https://code.google.com/p/catch-exception/)
-hide unnecessary details (with nulls if necessary)
+hide unnecessary values (with nulls if necessary)
 do not use BDD/integration tests frameworks for unit testing
 use assertion libraries
 private? final? instance variables
