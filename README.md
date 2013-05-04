@@ -105,11 +105,61 @@ What of you need to check the content of the exception message? JUnit 4 does off
     *CODE SAMPLE*
 
 
+Duplicate code (sparingly)
+--------------------------
+It is my belief that as much care should be given to the code in the test as to the code in production. However, as already shown in this paper, I do not think that exactly the same rules apply.
 
+In particular, I think it is a lot more acceptable to duplicate code in your tests:
+
+
+    @Test
+    public void should_limit_matches_to_100_meters_when_street_is_specified()
+    {
+        when(geocoder.geocode("Country", "City", "Street")).thenReturn(new Coordinate(1., 1.));
+        when(allPois.withinCircle(new Coordinate(1., 1.), 100.0)).thenReturn(newArrayList(new Business("Restaurant")));
+
+        assertThat(localBusinessResource.searchBusinesses("Country", "City", "Street"))//
+                .contains(new Business("Restaurant"));
+    }
+
+    @Test
+    public void should_limit_matches_to_100_meters_when_street_is_specified()
+    {
+        when(geocoder.geocode("Country", "City", "Street")).thenReturn(new Coordinate(1., 1.));
+        when(allPois.withinCircle(new Coordinate(1., 1.), 5000.0)).thenReturn(newArrayList(new Business("Restaurant")));
+
+        assertThat(localBusinessResource.searchBusinesses("Country", "City", "Street"))//
+                .contains(new Business("Restaurant"));
+    }
+
+In this situation, I much prefer duplicate lines of code, rather than hide my test setup.
+
+Some people like to have an initial unit test that sets things up, and checks for basic behavior. And then call this test from other, more intricate tests.
+
+    private Messages messages = new Messages();
+
+    @Test
+    public void should_save_a_new_message()
+    {
+    	messageCreator.add("Hello", messages);
+
+        assertThat(messages).hasSize(1);
+    }
+
+    @Test
+    public void should_delete_a_message()
+    {
+    	should_save_a_new_message();
+
+    	messageCreator.remove("Hello");
+
+        assertThat(messages).isEmpty();
+    }
+
+I am very much against this technique, as it makes a lot less clear what is being tested, and what might actually break. My preference goes to duplicating code. If it seems too painful to do so, then it is probably a sign that production code should be refactored. Only at the last resort would I start to factorize initialization code into a separate methods. Never would I call another test.
 
 Stuff to work on
 ================
-duplicate code (sparingly)
 use local static varargs methods as builder methods
 avoid calling test methods from other test methods, even for setup
 avoid using the setup/teardown methods
