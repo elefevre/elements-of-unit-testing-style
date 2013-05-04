@@ -5,6 +5,7 @@ Many papers have been written on the process of writing unit tests, including us
 
 Coding standards already exist. However, it is my conviction that they are best applied to production code. Rules are a bit different for tests. In the following, I describe what differing rules I use in my tests.
 
+
 Name test methods with underscores
 ----------------------------------
 
@@ -69,7 +70,7 @@ Although it might seem obvious in simple cases, it also means that, for example,
 
     public void can_limit_search_results_to_5()
     {
-    	// I recommend this over loops
+        // I recommend this over loops
         List<String> list = new ArrayList<String>();
         list.add("string");
         list.add("string");
@@ -141,7 +142,7 @@ Some people like to have an initial unit test that sets things up, and checks fo
     @Test
     public void should_save_a_new_message()
     {
-    	messageCreator.add("Hello", messages);
+        messageCreator.add("Hello", messages);
 
         assertThat(messages).hasSize(1);
     }
@@ -149,9 +150,9 @@ Some people like to have an initial unit test that sets things up, and checks fo
     @Test
     public void should_delete_a_message()
     {
-    	should_save_a_new_message();
+        should_save_a_new_message();
 
-    	messageCreator.remove("Hello");
+        messageCreator.remove("Hello");
 
         assertThat(messages).isEmpty();
     }
@@ -174,8 +175,43 @@ As an alternative, I tend to put some things as initialization of instance varia
 
     @Test
     public void should_produce_an_error_when_city_and_postal_code_are_unspecified() {
-    	...
+        ...
     }
+
+
+Reduce reliance on annotations
+------------------------------
+
+Some annotations are necessary for your test to run, particularly @Test. However, many of them are superfluous and will hide things from your test methods. Frameworks that provide annotations usually have the right intentions (hide irrelevant details from the tests), but they almost always come with a high price. Here is an example from using annotations provided the well-considered Mockito library. Can you find the bug?
+
+    @RunWith(MockitoJUnitRunner.class)
+    public class PointOfInterestFinderTest {
+        @Mock
+        PointOfInterests pois;
+        @Mock
+        Geocoder geocoder;
+
+        PointOfInterestFinder finder = new PointOfInterestFinder(pois, geocoder);
+
+        @Test
+        public void can_search_for_points_of_interest_near_an_address() {
+            assertThat(finder.search("a", "a", "a", "a", null)).isNotEmpty();
+        }
+    }
+
+Found it? This is rather subtle. You see, the @Mock annotation, as expected, assigns a mock to the annotated instance variable. However, it does so _after_ the test class has been instanciated. In other words, _after_ PointOfInterestFinder, the class under test here, has been instantiated. So our finder has been passed only null values in its constructor. Even if the mocks are actually instantiated by the time the test method is called, it is too late for the instance variable created earlier.
+
+A fix is to introduce an @Before method (4 lines of code). Another is to use yet another annotation, @InjectMocks, on the instance variable representing our class under test. However, this also comes with its own set of quirks and limitations[1]. This is sufficently unexpected to be the origin of a good proportion of the requests for help on the Mockito mailing list. My answer is almost always to avoid all those annotations altogether[2].
+
+[1]: for example, it will fail silently if you do not remove the call to the constructor. Also, it attemps to figure out what to pass as parameters to the constructor, based on the type, but using the same type for separate parameters is ambiguous. There is also the question of having multiple constructors... Trust me, you'll want to avoid this annotation altogether.
+
+[2]: see *XXXXXXX* and *XXXXX*
+
+These problems are not due to Mockito itself. They are technical limitation from the Java environment. However, other annotations, at the very best, tends to make their intentions unclear. The @Rule annotation from JUnit 4.7 *check*, for example, is presented (by Kent Beck, no less) as a good way to create resources that must be created safely before a test method and, more importantly, must be shut down cleanly (in effect partly replacing the need for @Before/@After methods). However, few people find this easy to understand. @Before/@After methods are probably the more intuitive way (especially for newcomers on the code base) to go in general.
+
+There are other examples, such as @Inject from Spring or XXXXXXXXXXXXX. They all suffer from some limitation. Either they require other annotations to work properly (often on the test class itself), or their behavior is difficult to understand, or they place limitations on how you can write your tests, or, simply, hide things that might be useful to see directly from within your tests.
+
+In light of this, I recommend avoiding annotations as much as possible. It is possible that someone will eventually show me one that is worth the trouble. I won't hold my breath, though.
 
 
 Keep as much context as possible within your test method
@@ -187,12 +223,12 @@ If your test method ends up being too long for your taste (how much is too long 
 
 This goal is very achievable in unit tests. However, I've found them a lot harder in my integration tests, and many of them end up inheriting from rather complex abstract classes. It is still an ideal that you should keep in mind, though.
 
+
 Stuff to work on
 ================
 use local static varargs methods as builder methods
 inline test values
 do not use logs
-avoid annotations in your tests, except for @Test
 mock types that you do not control (sometimes)
 use factory classes to mock types instantiated in your production code
 avoid sub-blocks (check exception details with https://code.google.com/p/catch-exception/)
