@@ -24,11 +24,11 @@ Work with a framework idiomatic to your programming language
 ------------------------------------------------------------
 
 If you code in Java, test in Java. In JavaScript, test in JavaScript. Ideally with a test framework that lets you write your unit tests in a way that does not feel contrived (or constrained) compared to writing production code.
-For example, until its version 4.0, JUnit required test classed to inherit from a special class, TestCase, and that test methods started with a special prefix 'test'. Although a good framework, these constraints felt rather arbitrary[^
+For example, until its version 4.0, JUnit required test classed to inherit from a special class, TestCase, and that test methods started with a special prefix 'test'. Although a good framework, these constraints felt rather arbitrary[
 1] and were replaced with annotations in later versions of JUnit.
 
 
-In contrast, unit testing your production language in a different language[^2] will require you to adjust your mental state every time you switch from production code to unit test code. Instead, we want as seamless transition as possible, as we'll frequently go from one to the other, especially when practicing TDD.
+In contrast, unit testing your production language in a different language[2] will require you to adjust your mental state every time you switch from production code to unit test code. Instead, we want as seamless transition as possible, as we'll frequently go from one to the other, especially when practicing TDD.
 
 
 The same advice applies when considering BDD frameworks with their own language or formalism such as Cucumber and FitNesse. Although those may have value as acceptance test environments, using them for unit testing will slow down the feedback cycle created by quickly going from reading/writing tests to reading/writing production code.
@@ -36,7 +36,7 @@ The same advice applies when considering BDD frameworks with their own language 
 Finally, notice how proficient you are in your production code? That comes from years of practice. It also comes from a production development environment. Use those to your advantage.
 
 [1]: in truth, they were present for technical reasons; it did feel like putting too many constraints on the developer, though
-[^2]: as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example
+[2]: as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example
 
 
 Method names should tell a story
@@ -64,7 +64,7 @@ For more about using "should", check out some of Liz Keogh's posts, such as [thi
 Tests should have no branches
 -----------------------------
 # avoid loops, try/catch clauses
-As opposed to production code, tests describe a straight story. What things we start with, what we do with them, and what we get (some call this the Given/When/Then pattern, or the *XXXXXX* Act Assert). This means that the code would be written as a single branch that can be read with as little mental effort as possible.
+As opposed to production code, tests describe a straight story. What things we start with, what we do with them, and what we get (some call this the Given/When/Then pattern, others the Arrange/Act/Assert pattern). This means that the code would be written as a single branch that can be read with as little mental effort as possible.
 
 Although it might seem obvious in simple cases, it also means that, for example, you should avoid loops when initializing your test data:
 
@@ -101,9 +101,14 @@ Since JUnit 4.0, this can be refactored as:
     }
 This has the added benefit of a more explicit error message.
 
-What of you need to check the content of the exception message? JUnit 4 does offer a mechanism for this, but I find it a little cumbersome *REFERENCE*. I prefer the [catch exception library](https://code.google.com/p/catch-exception/):
+What of you need to check the content of the exception message? JUnit 4 does offer a mechanism for this (see the [ExpectedException Rule](https://github.com/junit-team/junit/wiki/Exception-testing#expectedexception-rule), but I find it a little cumbersome. I prefer the [catch exception library](https://code.google.com/p/catch-exception/):
 
-    *CODE SAMPLE*
+    public void can_fail_when_searching_on_an_invalid_name() {
+        catchException(search).findByName("an invalid name");
+
+        assertThat(caughtException()).isInstanceOf(RuntimeException.class);
+        assertThat(caughtException()).hasMessage("Invalid name");
+    }
 
 
 Duplicate code (sparingly)
@@ -111,7 +116,6 @@ Duplicate code (sparingly)
 It is my belief that as much care should be given to the code in the test as to the code in production. However, as already shown in this paper, I do not think that exactly the same rules apply.
 
 In particular, I think it is a lot more acceptable to duplicate code in your tests:
-
 
     @Test
     public void should_limit_matches_to_100_meters_when_street_is_specified()
@@ -205,11 +209,11 @@ A fix is to introduce an @Before method (4 lines of code). Another is to use yet
 
 [1]: for example, it will fail silently if you do not remove the call to the constructor. Also, it attemps to figure out what to pass as parameters to the constructor, based on the type, but using the same type for separate parameters is ambiguous. There is also the question of having multiple constructors... Trust me, you'll want to avoid this annotation altogether.
 
-[2]: see *XXXXXXX* and *XXXXX*
+[2]: see [this thread](https://groups.google.com/d/topic/mockito/Kik9Pt3kW6k/discussion) for example
 
 These problems are not due to Mockito itself. They are technical limitation from the Java environment. However, other annotations, at the very best, tends to make their intentions unclear. The @Rule annotation from JUnit 4.7 *check*, for example, is presented (by Kent Beck, no less) as a good way to create resources that must be created safely before a test method and, more importantly, must be shut down cleanly (in effect partly replacing the need for @Before/@After methods). However, few people find this easy to understand. @Before/@After methods are probably the more intuitive way (especially for newcomers on the code base) to go in general.
 
-There are other examples, such as @Inject from Spring or XXXXXXXXXXXXX. They all suffer from some limitation. Either they require other annotations to work properly (often on the test class itself), or their behavior is difficult to understand, or they place limitations on how you can write your tests, or, simply, hide things that might be useful to see directly from within your tests.
+There are other examples, such as @RunWith(SpringJUnit4ClassRunner.class) from Spring Framework. They all suffer from some limitation. Either they require the usage of additional annotations (often on the test class itself), or their behavior is difficult to understand, or they place limitations on how you can write your tests, or, simply, hide things that might be useful to see directly from within your tests.
 
 In light of this, I recommend avoiding annotations as much as possible. It is possible that someone will eventually show me one that is worth the trouble. I won't hold my breath, though.
 
