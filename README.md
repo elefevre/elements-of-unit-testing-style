@@ -228,8 +228,8 @@ If your test method ends up being too long for your taste (how much is too long 
 This goal is very much achievable in unit tests. However, I've found them a lot harder in my integration tests, and many of them end up inheriting from rather complex abstract classes. It is still an ideal that you should keep in mind, though.
 
 
-Inline test values
-------------------
+Avoid method variables in tests
+-------------------------------
 
 In production code, it is recommend to extract local variables to make their usage clearer.
 
@@ -239,23 +239,51 @@ In production code, it is recommend to extract local variables to make their usa
     int age = currentYear - yearOfBirth;
     isAllowedToDrink(age);
 
-By the same token, test values are frequently extracted to local variables.
+By the same token, I often see test values extracted to local variables.
 
-    String name = "very long name that might ";
-    
+    String name = "Eric";
+
     store.createUserWithName(name);
-    
+
     assertThat(store.findByName(name).getName()).isEqualTo("Eric");
 
-I do not believe this makes code easier to read.
+I do not believe this makes code much easier to read. I'd rather see the following:
 
-_XXXXXXXXXXXXXXXXXXX_
+    store.createUserWithName("Eric");
+    
+    assertThat(store.findByName("Eric").getName()).isEqualTo("Eric");
+
+It makes clearer that things are happening in distinct steps. First, we update the store with a new name. Later, when we search with a String that has the same value, then we get our previously stored element. Reusing the same variable for storage can create confusion ("is the underlying code comparing pointers and not values?"), and takes valuable space on screen.
+Note that I do not mind the risk of mistyping the hard-coded values. _The whole point of this test is that it will catch those problems._
+
+Note that this works for any data type you have, not just primitive types, as long as your data types have a properly implemented equals() method:
+
+    store.createUser(user());
+    
+    assertThat(store.findAllUsers()).contains(user());
+
+In this example, user() is a static builder method, local to this test class, that creates a new instance of User, passing dummy data to the constructor if necessary (usually nulls, empty collections and zeroes).
+The important point is that we are making clear that users are being manipulated and that the current is not dealing with a particular attribute of the user (if it did, then I'd also have builder methods such as user(String firstName), user(int age), etc.).
+
+Aren't we losing the information provided by the name of the variable? Often, the name of the variable is not particularly explicit, such as "name" in the earlier example. If the name of the variable _was_ conveying information, then I tend to use it as the value itself:
+
+    // not recommended
+    String longName = "Eric Eric Eric Eric Eric Eric Eric Eric Eric Eric Eric Eric";
+
+    store.createUserWithName(longName);
+
+    assertThat(store.findByName(longName).getName()).isEqualTo("Eric Eric Eric Eric Eric Eric Eric Eric Eric Eric Eric Eric");
+
+    // better
+    store.createUserWithName("long name long name long name long name long name long name long name");
+
+    assertThat(store.findByName("long name long name long name long name long name long name long name").getName()).isEqualTo("long name long name long name long name long name long name long name");
+
 
 Stuff to work on
 ================
 
 * use local static varargs methods as builder methods
-* inline test values
 * do not use logs
 * mock types that you do not control (sometimes)
 * use factory classes to mock types instantiated in your production code
