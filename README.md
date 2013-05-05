@@ -332,13 +332,43 @@ Nowadays, I tend to write builder methods for single objects, and call them mult
     assertThat(findLongestName(newArrayList(user("a long name"), user("short name"))).isEqualTo(user("a long name"));
 
 
+Use assertion libraries
+-----------------------
+
+Assertions are ways to express the verifications to be done after exercizing your code under test. Early versions of JUnit came with a limited set of assertions (with a few variants):
+
+* assert()
+* assertEquals()
+* notEqualsMessage()
+
+This proved rather insufficient, and messages were not always very explicit, so later versions of JUnit expanded on those. By JUnit 3, there were 8 assertions methods, and finally, in JUnit 4.4, there was the addition of assertThat(), a generic assertion method based on Hamcrest. This made developers aware of the existence of fluent APIs for verifying the results from their production code. Thses APIs are great, and I strongly recommend them for writing your tests.
+
+I am aware of 3 fluent assertion libraries:
+
+* Hamcrest, a version of which is included in JUnit 4.4 and later 
+* FEST Assert
+* AssertJ, actually a fork from FEST Assert
+
+My preference goes to AssertJ. Like FEST Assert, I find its style particularly readable. Unlike AssertJ, one of its basic principles is to come with many well-named methods to check for values.
+
+Here are examples of usages:
+
+    // with JUnit, prior to v4.4
+    assertEquals(store.searchByName("name").size(), 10);
+
+    // with JUnit 4.4+, or with Hamcrest
+    assertThat(store.searchByName("name"), hasSize(10));
+
+    // with FEST Assert or AssertJ
+    assertThat(store.searchByName("name")).hasSize(10);
+
+I feel that AssertJ's style, although little different from Hamcrest's, is a bit more readable. Also, it benefits from easier auto-completion.
+
+
 Stuff to work on
 ================
 
 * do not use logs
 * mock types that you do not control (sometimes)
 * use factory classes to mock types instantiated in your production code
-* hide unnecessary values (with nulls if necessary)
-* do not use BDD/integration tests frameworks for unit testing
-* use assertion libraries
 * private? final? instance variables
