@@ -280,10 +280,61 @@ Aren't we losing the information provided by the name of the variable? Often, th
     assertThat(store.findByName("long name long name long name long name long name long name long name").getName()).isEqualTo("long name long name long name long name long name long name long name");
 
 
+Provide local builder methods
+-----------------------------
+
+Some of the data classes used in my tests are sometimes a bit difficult to instantiate. In extreme situations, they can take several lines of code just for creating a single object.
+
+    DateTime started = new DateTime(1L);
+    DateTime ended = new DateTime(2L);
+    new BackTest("session id", "backtest id", "solution id", Status.ENDED, "details", 0, started, ended);
+
+Not all of this is relevant for the test you are currently considering. What you want is to see only the parameters that have an impact in the current context.
+
+Over the years, I have used several strategies to work around this. One option is to pass nulls, except for the parameter you are interested in, but the remaining might still be too distracting. Another is to provide an [Object Mother](http://martinfowler.com/bliki/ObjectMother.html), a class that have pre-configured objects; this is the solution I like the least, as it creates indirect coupling between tests. Yet another idea is to provide several constructors in the classes being instantiated; this have limitations, though, as not all combinaisons of parameters are possible.
+
+In the end, I've settled on builder methods _inside my test classes_. They would come in as many flavors as needed for my test class:
+
+    private static BackTest backTest(String backtestId) {
+        DateTime started = new DateTime(1L);
+        DateTime ended = new DateTime(2L);
+        new BackTest("session id", backtestId, "solution id", Status.ENDED, "details", 0, started, ended);
+    }
+
+    private static BackTest backTest(String backtestId, String solutionId) {
+        DateTime started = new DateTime(1L);
+        DateTime ended = new DateTime(2L);
+        new BackTest("session id", backtestId, solutionId, Status.ENDED, "details", 0, started, ended);
+    }
+
+If by chance there is ambiguity in the parameters necessary, it is easy to rename builders as appropriate:
+
+    private static BackTest backTestWithBackTestId(String backtestId) {
+        DateTime started = new DateTime(1L);
+        DateTime ended = new DateTime(2L);
+        new BackTest("session id", backtestId, "solution id", Status.ENDED, "details", 0, started, ended);
+    }
+
+    private static BackTest backTestWithSolutionId(String solutionId) {
+        DateTime started = new DateTime(1L);
+        DateTime ended = new DateTime(2L);
+        new BackTest("session id", "backtest id", solutionId, Status.ENDED, "details", 0, started, ended);
+    }
+
+Note how those builder methods are private; I much prefer keep them specific to my test classes. In my projects, I have not found much value in factorizing them into some BackTestBuilder class (you might have realized by now that I put a lot of effort into avoiding coupling between test classes). These methods are also static. This is partly for aesthetic reasons (italics are nice), and also because it makes clearer that they should not be considered as part of the code currently under test.
+
+In the past, I also tended to created builder methods that take varargs (see [this post from 2011](http://ericlefevre.net/wordpress/2011/11/21/javas-varargs-are-for-unit-tests/) for more):
+
+    assertThat(findLongestName(users("a long name", "short name"))).isEqualTo(user("a long name"));
+
+Nowadays, I tend to write builder methods for single objects, and call them multiple times:
+
+    assertThat(findLongestName(newArrayList(user("a long name"), user("short name"))).isEqualTo(user("a long name"));
+
+
 Stuff to work on
 ================
 
-* use local static varargs methods as builder methods
 * do not use logs
 * mock types that you do not control (sometimes)
 * use factory classes to mock types instantiated in your production code
