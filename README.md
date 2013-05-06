@@ -367,10 +367,26 @@ Here are examples of usages:
 I feel that AssertJ's style, although little different from Hamcrest's, is a bit more readable. Also, it benefits from easier auto-completion.
 
 
+Do not use logs
+---------------
+
+It is well known that printing debug traces in the console from production code is bad practice [1]. The general recommendation is to use logs instead (although there is also some debate on that[2]). So it would seem natural to do the same on the test side.
+
+[1]: see [this thread](http://stackoverflow.com/questions/8601831/do-not-use-system-out-println-in-server-side-code), for example
+
+[2]: see XXXXXXXXXXXXXXXX, Nat Pryce, Steve Freeman, etc.
+
+The question is, what do you want logs in the tests for? Logs are generally used for diagnostic of unexpected events in production. There is no such need in tests. If your failing tests do not provide enough context, then you must refactor them to do so. Generally, this will mean making your assertions more clear. In the worst case, you might have to run your test via a debugger.
+
+Now, if the problem is that the unit tests are using resources that can not be easily inspected (random numbers, for example), then they are most likely _not_ unit tests, but rather integration tests. You should refactor them to take well-know numbers instead.
+
+
+
 Stuff to work on
 ================
 
-* do not use logs
+* "what is a good unit test?"
 * mock types that you do not control (sometimes)
 * use factory classes to mock types instantiated in your production code
 * private? final? instance variables
+* Avoid comments and descriptions
