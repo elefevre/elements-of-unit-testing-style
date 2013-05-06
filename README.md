@@ -3,7 +3,7 @@ Elements of unit testing style
 
 Many papers have been written on the process of writing unit tests, including using the test-first approach. Other papers describe what makes a good test, from the technical point of view. In this chapter, I want to focus on the style of the resulting test. A form of coding standards, if you will, focused on the tests.
 
-Coding standards already exist. However, it is my conviction that they are best applied to production code. Rules are a bit different for tests. In the following, I describe what differing rules I use in my tests.
+Coding standards already exist. However, it is my conviction that the available ones apply best to production code. Rules are a bit different for tests. In the following, I describe what differing rules I use in my tests.
 
 
 Name test methods with underscores
@@ -44,7 +44,8 @@ Method names should tell a story
 
 There is actually dome (healthy) debate on how to name your test methods in a unit test class. My preference is to let my method names tell me a story. For this, I like my method names to start with a verb that lets me describe what will be tested, in functional terms if possible.
 
-For example, here is a method:
+For example, here is a test method:
+
     public class LocalBusinessResourceTest {
         @Test
         public void should_limit_the_number_search_matches_to_20_by_default() {
@@ -63,8 +64,7 @@ For more about using "should", check out some of Liz Keogh's posts, such as [thi
 
 Tests should have no branches
 -----------------------------
-# avoid loops, try/catch clauses
-As opposed to production code, tests describe a straight story. What things we start with, what we do with them, and what we get (some call this the Given/When/Then pattern, others the Arrange/Act/Assert pattern). This means that the code would be written as a single branch that can be read with as little mental effort as possible.
+As opposed to production code, tests should describe a linear story. What things we start with, what we do with them, and what we get (some call this the Given/When/Then pattern, others the Arrange/Act/Assert pattern). This means that the code would be written as a single branch that can be read with as little mental effort as possible.
 
 Although it might seem obvious in simple cases, it also means that, for example, you should avoid loops when initializing your test data:
 
@@ -161,7 +161,7 @@ Some people like to have an initial unit test that sets things up, and checks fo
         assertThat(messages).isEmpty();
     }
 
-I am very much against this technique, as it makes a lot less clear what is being tested, and what might actually break. My preference goes to duplicating code. If it seems too painful to do so, then it is probably a sign that production code should be refactored. Only at the last resort would I start to factorize initialization code into a separate methods. Never would I call another test.
+I am very much opposed to this technique, as it makes a lot less clear what is being tested, and what might actually break. My preference goes to duplicating code. If it seems too painful to do so, then it is probably a sign that production code should be refactored. Only at the last resort would I start to factorize initialization code into a separate methods. Never would I call another test.
 
 
 Reduce reliance on setup/teardown methods
@@ -211,7 +211,7 @@ A fix is to introduce an @Before method (4 lines of code). Another is to use yet
 
 [2]: see [this thread](https://groups.google.com/d/topic/mockito/Kik9Pt3kW6k/discussion) for example
 
-These problems are not due to Mockito itself. They are technical limitation from the Java environment. However, other annotations, at the very best, tends to make their intentions unclear. The @Rule annotation from JUnit 4.7 *check*, for example, is presented (by Kent Beck, no less) as a good way to create resources that must be created safely before a test method and, more importantly, must be shut down cleanly (in effect partly replacing the need for @Before/@After methods). However, few people find this easy to understand. @Before/@After methods are probably the more intuitive way (especially for newcomers on the code base) to go in general.
+These problems are not due to Mockito itself. They are technical limitation from the Java environment. However, other annotations, at the very best, tends to make their intentions unclear. The @Rule annotation from JUnit 4.7 *XXXXXXXXXXXXXXXXXcheckXXXXXXXXXXXXXXX*, for example, is presented (by Kent Beck, no less) as a good way to create resources that must be created safely before a test method and, more importantly, must be shut down cleanly (in effect partly replacing the need for @Before/@After methods). However, few people find this easy to understand. @Before/@After methods are probably the more intuitive way (especially for newcomers on the code base) to go in general.
 
 There are other examples, such as @RunWith(SpringJUnit4ClassRunner.class) from Spring Framework. They all suffer from some limitation. Either they require the usage of additional annotations (often on the test class itself), or their behavior is difficult to understand, or they place limitations on how you can write your tests, or, simply, hide things that might be useful to see directly from within your tests.
 
@@ -341,7 +341,9 @@ Assertions are ways to express the verifications to be done after exercizing you
 * assertEquals()
 * notEqualsMessage()
 
-This proved rather insufficient, and messages were not always very explicit, so later versions of JUnit expanded on those. By JUnit 3, there were 8 assertions methods, and finally, in JUnit 4.4, there was the addition of assertThat(), a generic assertion method based on Hamcrest. This made developers aware of the existence of fluent APIs for verifying the results from their production code. Thses APIs are great, and I strongly recommend them for writing your tests.
+This proved rather insufficient, and messages were not always very explicit, so later versions of JUnit expanded on those. By JUnit 3, there were 8 assertions methods, and finally, in JUnit 4.4, there was the addition of assertThat(), a generic assertion method based on Hamcrest[1]. This made developers aware of the existence of fluent APIs for verifying the results from their production code. These APIs are great, and I strongly recommend them for writing your tests.
+
+[1]: which, in retrospect, might not have been the best decision, according to Kent Beck ("@elefevre i like hamcrest, but i don't think the dependency (our first ever) was worth it on balance. haven't talked about it publicly tho.", [see this Twitter message](https://twitter.com/KentBeck/status/331422460371156992))
 
 I am aware of 3 fluent assertion libraries:
 
