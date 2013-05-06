@@ -381,6 +381,23 @@ The question is, what do you want logs in the tests for? Logs are generally used
 Now, if the problem is that the unit tests are using resources that can not be easily inspected (random numbers, for example), then they are most likely _not_ unit tests, but rather integration tests. You should refactor them to take well-know numbers instead.
 
 
+Avoid descriptions in assertions
+--------------------------------
+
+A feature of assertions provided by JUnit is that each of them come with an optional Description parameter.
+
+    assertEquals("result", compute());
+    assertEquals("Something went wrong", "result", compute());
+
+I've always felt that those descriptions, like Javadoc comments in production code, added very little value. I've also noticed that, with the recent spread of assertions library, descriptions have become much less prevalent, even though those libraries do offer the option of adding descriptions.
+
+    assertThat(compute()).describedAs("Something went wrong").isEqualTo("result");
+    assertThat("Something went wrong", compute(), equalTo("result"));
+
+It seems that descriptions have been used in older versions of JUnit as a way to cope against the limitations of the available assertion. Now that assertions can be a lot more specific ("<['hello', 'world', 'world']> contains duplicate(s):<['world']>"), it seems that descriptions provide little value.
+
+Today, there is no excuse for clutches like descriptions in your tests. Use specific assertions liberaly instead. And remember, unit tests are made to be easily re-run, so if the error message is not explicit enough, you always have the option to run your tests and see for yourself.
+
 
 Stuff to work on
 ================
@@ -389,4 +406,3 @@ Stuff to work on
 * mock types that you do not control (sometimes)
 * use factory classes to mock types instantiated in your production code
 * private? final? instance variables
-* Avoid comments and descriptions
