@@ -399,10 +399,51 @@ It seems that descriptions have been used in older versions of JUnit as a way to
 Today, there is no excuse for clutches like descriptions in your tests. Use specific assertions liberaly instead. And remember, unit tests are made to be easily re-run, so if the error message is not explicit enough, you always have the option to run your tests and see for yourself.
 
 
+Mock types that you do not control, as a first step
+---------------------------------------------------
+
+Steve Freeman and Nat Pryce make a compeling case that you should only mock types that you own[1]. Although the reasoning is right, I do not feel this is the simplest possible thing.
+
+[1]: http://www.mockobjects.com/2008/11/only-mock-types-you-own-revisited.html
+
+My approach is to mock even classes that I do not own. That is, I have no problem with injecting my services with objects external to the source code directly under my control.
+
+There are limitations to that. For example, some external classes are marked as final, or some of their methods are final and/or static, making it painfully hard to mock (it is possible to do so with some mocking libraries, but I never found it was worth the trouble). In those cases, yes, I would wrap them with a class of my own design that would simply redirect to these external classes. However, these technical limitations aside, I tend to mock external classes without shame.
+
+    @Test
+    public void should_find_only_text_files_in_the_specified_directory() {
+        File file = mock(File.class);
+        when(file.list()).thenReturn(new String[] { "readme.txt", "foobar" });
+
+        assertThat(store.list(file)).contains("readme.txt");
+    }
+
+I also mock external services. In this example, mocking the central class from Morphia lets me easily check whether it is configured as expected.
+
+    @Test
+    public void should_register_all_business_classes() {
+        Mapper mapper = mock(Mapper.class);
+        Morphia morphia = mock(Morphia.class);
+        MorphiaWrapper wrapper = new MorphiaWrapper(morphia);
+        when(morphia.getMapper()).thenReturn(mapper);
+
+        wrapper.registerBusinessClasses();
+
+        verify(mapper).addMappedClass(Customer.class);
+        verify(mapper).addMappedClass(Purchase.class);
+    }
+
+However, in practice, it turns out that this sort of situation is a lot less common than it seems. Also, it often turns out that I end up introducing intermediate classes between my services and external classes. In the first example listed here, the store ended up taking only "LocalFiles" in parameter, an immutable class that contained only the information useful for the rest of the application.
+
+    @Test
+    public void should_find_only_text_files_in_the_specified_directory() {
+        assertThat(store.list(new LocalFile().withFiles("readme.txt", "foobar"))).contains("readme.txt");
+    }
+
+
 Stuff to work on
 ================
 
 * "what is a good unit test?"
-* mock types that you do not control (sometimes)
 * use factory classes to mock types instantiated in your production code
 * private? final? instance variables
