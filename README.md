@@ -20,8 +20,8 @@ This makes sense when those methods are called. It feels as if requests are bein
     cannot_fail_when_address_is_not_specified()
 
 
-Work with a framework idiomatic to your programming language
-------------------------------------------------------------
+Work with a test framework idiomatic to your programming language
+-----------------------------------------------------------------
 
 If you code in Java, test in Java. In JavaScript, test in JavaScript. Ideally with a test framework that lets you write your unit tests in a way that does not feel contrived (or constrained) compared to writing production code.
 For example, until its version 4.0, JUnit required test classed to inherit from a special class, TestCase, and that test methods started with a special prefix 'test'. Although a good framework, these constraints felt rather arbitrary[
@@ -165,7 +165,7 @@ I am very much opposed to this technique, as it makes a lot less clear what is b
 
 
 Reduce reliance on setup/teardown methods
----------------------------------------------
+-----------------------------------------
 
 JUnit provides optional @Before/@After annotations to mark some methods for running before or after all other test methods (there are also @BeforeClass/@AfterClass that will be run just once, before or after all other test methods). These used to be know as the setUp() and tearDown() methods in previous versions of JUnit.
 
@@ -228,8 +228,8 @@ If your test method ends up being too long for your taste (how much is too long 
 This goal is very much achievable in unit tests. However, I've found them a lot harder in my integration tests, and many of them end up inheriting from rather complex abstract classes. It is still an ideal that you should keep in mind, though.
 
 
-Avoid method variables in tests
--------------------------------
+Avoid local variables in test methods
+-------------------------------------
 
 In production code, it is recommend to extract local variables to make their usage clearer.
 
@@ -280,8 +280,8 @@ Aren't we losing the information provided by the name of the variable? Often, th
     assertThat(store.findByName("long name long name long name long name long name long name long name").getName()).isEqualTo("long name long name long name long name long name long name long name");
 
 
-Provide local builder methods
------------------------------
+Create local builder methods in test classes
+--------------------------------------------
 
 Some of the data classes used in my tests are sometimes a bit difficult to instantiate. In extreme situations, they can take several lines of code just for creating a single object.
 
@@ -410,7 +410,6 @@ My approach is to mock even classes that I do not own. That is, I have no proble
 
 There are limitations to that. For example, some external classes are marked as final, or some of their methods are final and/or static, making it painfully hard to mock (it is possible to do so with some mocking libraries, but I never found it was worth the trouble). In those cases, yes, I would wrap them with a class of my own design that would simply redirect to these external classes. However, these technical limitations aside, I tend to mock external classes without shame.
 
-    @Test
     public void should_find_only_text_files_in_the_specified_directory() {
         File file = mock(File.class);
         when(file.list()).thenReturn(new String[] { "readme.txt", "foobar" });
@@ -420,7 +419,6 @@ There are limitations to that. For example, some external classes are marked as 
 
 I also mock external services. In this example, mocking the central class from Morphia lets me easily check whether it is configured as expected.
 
-    @Test
     public void should_register_all_business_classes() {
         Mapper mapper = mock(Mapper.class);
         Morphia morphia = mock(Morphia.class);
@@ -435,15 +433,114 @@ I also mock external services. In this example, mocking the central class from M
 
 However, in practice, it turns out that this sort of situation is a lot less common than it seems. Also, it often turns out that I end up introducing intermediate classes between my services and external classes. In the first example listed here, the store ended up taking only "LocalFiles" in parameter, an immutable class that contained only the information useful for the rest of the application.
 
-    @Test
     public void should_find_only_text_files_in_the_specified_directory() {
         assertThat(store.list(new LocalFile().withFiles("readme.txt", "foobar"))).contains("readme.txt");
     }
+
+
+Use wrapper classes to mock helper classes
+------------------------------------------
+
+Occasionally, it is useful to refer to static methods from helper classes. A good example is obtaining the current time from the System class:
+
+    public void saveCurrentTimeToFile() {
+        long now = System.currentTimeMillis();
+        ...
+    }
+
+
+The issue, of course, is that this is really hard to instrument in your test classes. An option is to pass the time in parameter:
+
+    public void saveCurrentTimeToFile(long now) {
+        ...
+    }
+
+This works only to a point, especially if one wants to hide this from client classes. My solution is to introduce a wrapper class:
+
+    public class SystemTime {
+        public long currentTimeMillis() {
+            return System.currentTimeMillis();
+        }
+    }
+
+This class can usually be injected automatically by Spring or Guice. Or, as I often do, it is possible to add constructors especially for instantiated this wrapper class:
+
+    public Store() {
+        this(new SystemTime());
+    }
+
+    // useful for testing
+    Store(SystemTime systemTime) {
+        this.systemTime = systemTime;
+    }
+
+I often end with almost one wrapper class per helper class, especially those from Apache Commons: IOUtils, SystemUtils, StringUtils... My wrapper classes generally have the same name as their external counterparts, making it easier to find them.
+
+Should you test your wrapper classes? My advise is to make them so simple that testing should not be necessary.
+
+
+Use builders to mock classes instantiated in your production code
+-----------------------------------------------------------------
+
+Instantiating things in your production code is usually not a problem. You instantiate a new object, manipulate it, and use its result (or send it to another service). Reasonably easy to test.
+
+Sometimes, the object is more complex. Maybe you need information from the filesystem and you are instantiating Files. Maybe you are using a scheduling library that runs tasks at specific intervals (and instantiating the scheduler puts all sorts of things in movement). It might be cleaner to wrap them all with your own classes, but you want to know more before doing so.
+
+In those situations, I usually start by extract the instantiation code in a local method, and override this method in the unit tests:
+
+    public void should_save_data_to_the_store_file() {
+        final File file = mock(File.class);
+        Store store = new Store() {
+            @Override
+            File newFile(String filename) {
+                return file;
+            }
+        };
+
+        store.save("data");
+        ...
+    }
+
+This is rather ugly, so if this happens a couple of times for the same type, I tend to quickly introduce a builder.
+
+    public class FileBuilder {
+        public File newFile(String name) {
+            return new File(name);
+        }
+    }
+
+    public class Store {
+        private FileBuilder fileBuilder;
+
+        public Store(FileBuilder fileBuilder) {
+            this.fileBuilder = fileBuilder;
+        }
+
+        public void save(String data) {
+            File file = fileBuilder.newFile("store");
+            ...
+        }
+    }
+
+    public class StoreTest {
+        File file = mock(File.class);
+        FileBuilder fileBuilder = mock(FileBuilder.class);
+
+        Store store = new Store(fileBuilder);
+
+        @Test
+        public void should_save_data_to_the_store_file() throws IOException {
+            when(fileBuilder.newFile("store")).thenReturn(file);
+            
+            store.save("data");
+            ...
+        }
+    }
+
+Like wrappers, your builder classes should so simple that testing should not be necessary.
 
 
 Stuff to work on
 ================
 
 * "what is a good unit test?"
-* use factory classes to mock types instantiated in your production code
-* private? final? instance variables
