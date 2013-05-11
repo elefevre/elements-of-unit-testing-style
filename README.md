@@ -26,8 +26,7 @@ Work with a test framework idiomatic to your programming language
 -----------------------------------------------------------------
 
 If you code in Java, test in Java. In JavaScript, test in JavaScript. Ideally with a test framework that lets you write your unit tests in a way that does not feel contrived (or constrained) compared to writing production code.
-For example, until its version 4.0, JUnit required test classed to inherit from a special class, TestCase, and that test methods started with a special prefix 'test'. Although a good framework, these constraints felt rather arbitrary[
-1] and were replaced with annotations in later versions of JUnit.
+For example, until its version 4.0, JUnit required test classed to inherit from a special class, TestCase, and that test methods started with a special prefix 'test'. Although a good framework, these constraints felt rather arbitrary[1] and were replaced with annotations in later versions of JUnit.
 
 
 In contrast, unit testing your production language in a different language[2] will require you to adjust your mental state every time you switch from production code to unit test code. Instead, we want as seamless transition as possible, as we'll frequently go from one to the other, especially when practicing TDD.
@@ -38,6 +37,7 @@ The same advice applies when considering BDD frameworks with their own language 
 Finally, notice how proficient you are in your production code? That comes from years of practice. It also comes from a production development environment. Use those to your advantage.
 
 [1]: in truth, they were present for technical reasons; it did feel like putting too many constraints on the developer, though
+
 [2]: as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example
 
 
@@ -116,6 +116,7 @@ What of you need to check the content of the exception message? JUnit 4 does off
 
 Duplicate code (sparingly)
 --------------------------
+
 It is my belief that as much care should be given to the code in the test as to the code in production. However, as already shown in this paper, I do not think that exactly the same rules apply.
 
 In particular, I think it is a lot more acceptable to duplicate code in your tests:
@@ -546,6 +547,6 @@ Like wrappers, your builder classes should so simple that testing should not be 
 Stuff to work on
 ================
 
-* "what is a good unit test?"
 * do not assume that the system is in a useable state
 * do not assume or impose that tests be run in a specific order
+* fix footnotes
