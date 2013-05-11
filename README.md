@@ -1,7 +1,9 @@
 Elements of unit testing style
 ==============================
 
-Many papers have been written on the process of writing unit tests, including using the test-first approach. Other papers describe what makes a good test, from the technical point of view. In this chapter, I want to focus on the style of the resulting test. A form of coding standards, if you will, focused on the tests.
+Many papers have been written on the process of writing unit tests, including using the test-first approach. Other papers describe what makes a good test, from the technical point of view[1]. In this chapter, I want to focus on the style of the resulting test. A form of coding standards, if you will, focused on the tests.
+
+[1]: [this article](http://codebetter.com/jeremymiller/2005/07/20/qualities-of-a-good-unit-test/), like many others, has a good overview: tests should be atomic, independant, isolated, clear, easy and fast.
 
 Coding standards already exist. However, it is my conviction that the available ones apply best to production code. Rules are a bit different for tests. In the following, I describe what differing rules I use in my tests.
 
@@ -14,7 +16,7 @@ In production code, common coding standards for Java code recommend writing meth
     retrieveUserDetails()
     createABankAccount()
 
-This makes sense when those methods are called. It feels as if requests are being made by the user of the objects ("bankTeller.createABankAccount()", please). However, methods in unit tests are not called by our code. They do not need to represent requests. They do need to tell a story. This story is best told using underscore.
+This makes sense when those methods are called. It feels as if requests are being made by the user of the objects (dear "bankTeller.createABankAccount()", please). However, methods in unit tests are not called by our code. They do not need to represent requests. They do need to tell a story. This story is best told using underscore.
 
     should_search_by_name_address()
     cannot_fail_when_address_is_not_specified()
@@ -39,8 +41,8 @@ Finally, notice how proficient you are in your production code? That comes from 
 [2]: as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example
 
 
-Method names should tell a story
---------------------------------
+Tell a story using the test names
+---------------------------------
 
 There is actually dome (healthy) debate on how to name your test methods in a unit test class. My preference is to let my method names tell me a story. For this, I like my method names to start with a verb that lets me describe what will be tested, in functional terms if possible.
 
@@ -57,13 +59,14 @@ What I read, half-unconsciously, is "The class LocalBusinessResource should limi
 
 Starting with "should" or "can" helps in this regard. Some authors advocate starting with ["fact"](https://github.com/marick/Midje) or following a [UnitOfWork\_StateUnderTest\_ExpectedBehavior](http://osherove.com/blog/2005/4/3/naming-standards-for-unit-tests.html) pattern. I feel it makes the flow of the story less natural, though.
 
-One drawback of this style is that method names are longer than is usual. I have never found this to be an issue in practice. Only on rare occasions do the names reach more than 100, which is very acceptable.
+One drawback of this style is that method names are longer than is usual. I have never found this to be an issue in practice. Only on rare occasions do the names reach more than 100, which is very acceptable. On balance, I'd recommend using long, descriptive names.
 
 For more about using "should", check out some of Liz Keogh's posts, such as [this one](http://lizkeogh.com/2005/03/14/the-should-vs-will-debate-or-why-doubt-is-good/).
 
 
-Tests should have no branches
------------------------------
+Avoid branches in the test code
+-------------------------------
+
 As opposed to production code, tests should describe a linear story. What things we start with, what we do with them, and what we get (some call this the Given/When/Then pattern, others the Arrange/Act/Assert pattern). This means that the code would be written as a single branch that can be read with as little mental effort as possible.
 
 Although it might seem obvious in simple cases, it also means that, for example, you should avoid loops when initializing your test data:
@@ -213,9 +216,9 @@ A fix is to introduce an @Before method (4 lines of code). Another is to use yet
 
 These problems are not due to Mockito itself. They are technical limitation from the Java environment. However, other annotations, at the very best, tends to make their intentions unclear. The @Rule annotation from JUnit 4.7 *XXXXXXXXXXXXXXXXXcheckXXXXXXXXXXXXXXX*, for example, is presented (by Kent Beck, no less) as a good way to create resources that must be created safely before a test method and, more importantly, must be shut down cleanly (in effect partly replacing the need for @Before/@After methods). However, few people find this easy to understand. @Before/@After methods are probably the more intuitive way (especially for newcomers on the code base) to go in general.
 
-There are other examples, such as @RunWith(SpringJUnit4ClassRunner.class) from Spring Framework. They all suffer from some limitation. Either they require the usage of additional annotations (often on the test class itself), or their behavior is difficult to understand, or they place limitations on how you can write your tests, or, simply, hide things that might be useful to see directly from within your tests.
+There are other examples, such as @RunWith(SpringJUnit4ClassRunner.class) from Spring Framework or RestFuse for testing HTTP APIs. They all suffer from some limitation in my view. Either they require the usage of additional annotations (often on the test class itself), or their behavior is difficult to understand, or they place limitations on how you can write your tests, or, simply, hide things that might be useful to see directly from within your tests.
 
-In light of this, I recommend avoiding annotations as much as possible. It is possible that someone will eventually show me one that is worth the trouble. I won't hold my breath, though.
+In light of this, I recommend avoiding annotations as much as possible. It is possible that someone will eventually show me one that is worth the trouble. In the meantime, I'll remain skeptical.
 
 
 Keep as much context as possible within your test method
@@ -374,7 +377,7 @@ It is well known that printing debug traces in the console from production code 
 
 [1]: see [this thread](http://stackoverflow.com/questions/8601831/do-not-use-system-out-println-in-server-side-code), for example
 
-[2]: see XXXXXXXXXXXXXXXX, Nat Pryce, Steve Freeman, etc.
+[2]: such as [this post](http://www.mockobjects.com/2007/04/test-smell-logging-is-also-feature.html) by Steve Freeman
 
 The question is, what do you want logs in the tests for? Logs are generally used for diagnostic of unexpected events in production. There is no such need in tests. If your failing tests do not provide enough context, then you must refactor them to do so. Generally, this will mean making your assertions more clear. In the worst case, you might have to run your test via a debugger.
 
@@ -544,3 +547,5 @@ Stuff to work on
 ================
 
 * "what is a good unit test?"
+* do not assume that the system is in a useable state
+* do not assume or impose that tests be run in a specific order
