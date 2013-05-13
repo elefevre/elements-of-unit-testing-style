@@ -1,9 +1,7 @@
 Elements of unit testing style
 ==============================
 
-Many papers have been written on the process of writing unit tests, including using the test-first approach. Other papers describe what makes a good test, from the technical point of view[1]. In this chapter, I want to focus on the style of the resulting test. A form of coding standards, if you will, focused on the tests.
-
-[1]: [this article](http://codebetter.com/jeremymiller/2005/07/20/qualities-of-a-good-unit-test/), like many others, has a good overview: tests should be atomic, independant, isolated, clear, easy and fast.
+Many papers have been written on the process of writing unit tests, including using the test-first approach. Other papers describe what makes a good test, from the technical point of view (for more on this, see [this article](http://codebetter.com/jeremymiller/2005/07/20/qualities-of-a-good-unit-test/): tests should be atomic, independant, isolated, clear, easy and fast). In this chapter, I want to focus on the style of the resulting test. A form of coding standards, if you will, focused on the tests.
 
 Coding standards already exist. However, it is my conviction that the available ones apply best to production code. Rules are a bit different for tests. In the following, I describe what differing rules I use in my tests.
 
@@ -26,19 +24,15 @@ Work with a test framework idiomatic to your programming language
 -----------------------------------------------------------------
 
 If you code in Java, test in Java. In JavaScript, test in JavaScript. Ideally with a test framework that lets you write your unit tests in a way that does not feel contrived (or constrained) compared to writing production code.
-For example, until its version 4.0, JUnit required test classed to inherit from a special class, TestCase, and that test methods started with a special prefix 'test'. Although a good framework, these constraints felt rather arbitrary[1] and were replaced with annotations in later versions of JUnit.
+For example, until its version 4.0, JUnit required test classed to inherit from a special class, TestCase, and that test methods started with a special prefix 'test'. Although a good framework, these constraints felt rather arbitrary (in truth, they were present for technical reasons; it did feel like putting too much constraint on the developer, though) and were replaced with annotations in later versions of JUnit.
 
 
-In contrast, unit testing your production language in a different language[2] will require you to adjust your mental state every time you switch from production code to unit test code. Instead, we want as seamless transition as possible, as we'll frequently go from one to the other, especially when practicing TDD.
+In contrast, unit testing your production language in a different language (as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example) will require you to adjust your mental state every time you switch from production code to unit test code. Instead, we want as seamless transition as possible, as we'll frequently go from one to the other, especially when practicing TDD.
 
 
 The same advice applies when considering BDD frameworks with their own language or formalism such as Cucumber and FitNesse. Although those may have value as acceptance test environments, using them for unit testing will slow down the feedback cycle created by quickly going from reading/writing tests to reading/writing production code.
 
 Finally, notice how proficient you are in your production code? That comes from years of practice. It also comes from a production development environment. Use those to your advantage.
-
-[1]: in truth, they were present for technical reasons; it did feel like putting too many constraints on the developer, though
-
-[2]: as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example
 
 
 Tell a story using the test names
@@ -209,11 +203,7 @@ Some annotations are necessary for your test to run, particularly @Test. However
 
 Found it? This is rather subtle. You see, the @Mock annotation, as expected, assigns a mock to the annotated instance variable. However, it does so _after_ the test class has been instanciated. In other words, _after_ PointOfInterestFinder, the class under test here, has been instantiated. So our finder has been passed only null values in its constructor. Even if the mocks are actually instantiated by the time the test method is called, it is too late for the instance variable created earlier.
 
-A fix is to introduce an @Before method (4 lines of code). Another is to use yet another annotation, @InjectMocks, on the instance variable representing our class under test. However, this also comes with its own set of quirks and limitations[1]. This is sufficently unexpected to be the origin of a good proportion of the requests for help on the Mockito mailing list. My answer is almost always to avoid all those annotations altogether[2].
-
-[1]: for example, it will fail silently if you do not remove the call to the constructor. Also, it attemps to figure out what to pass as parameters to the constructor, based on the type, but using the same type for separate parameters is ambiguous. There is also the question of having multiple constructors... Trust me, you'll want to avoid this annotation altogether.
-
-[2]: see [this thread](https://groups.google.com/d/topic/mockito/Kik9Pt3kW6k/discussion) for example
+A fix is to introduce an @Before method (4 lines of code). Another is to use yet another annotation, @InjectMocks, on the instance variable representing our class under test. However, this also comes with its own set of quirks and limitations (among other things, it will fail silently if you do not remove the call to the constructor, guess, and sometimes fail, what to pass as parameters to the constructor, guess and saometimes fail which constructor to use, pass null when the dependency is not provided, etc.). This is sufficently unexpected to be the origin of a good proportion of the requests for help on the Mockito mailing list. My answer is almost always to avoid all those annotations altogether (see [this thread](https://groups.google.com/d/topic/mockito/Kik9Pt3kW6k/discussion) for example).
 
 These problems are not due to Mockito itself. They are technical limitation from the Java environment. However, other annotations, at the very best, tends to make their intentions unclear. The @Rule annotation from JUnit 4.7 *XXXXXXXXXXXXXXXXXcheckXXXXXXXXXXXXXXX*, for example, is presented (by Kent Beck, no less) as a good way to create resources that must be created safely before a test method and, more importantly, must be shut down cleanly (in effect partly replacing the need for @Before/@After methods). However, few people find this easy to understand. @Before/@After methods are probably the more intuitive way (especially for newcomers on the code base) to go in general.
 
@@ -345,9 +335,7 @@ Assertions are ways to express the verifications to be done after exercizing you
 * assertEquals()
 * notEqualsMessage()
 
-This proved rather insufficient, and messages were not always very explicit, so later versions of JUnit expanded on those. By JUnit 3, there were 8 assertions methods, and finally, in JUnit 4.4, there was the addition of assertThat(), a generic assertion method based on Hamcrest[1]. This made developers aware of the existence of fluent APIs for verifying the results from their production code. These APIs are great, and I strongly recommend them for writing your tests.
-
-[1]: which, in retrospect, might not have been the best decision, according to Kent Beck ("@elefevre i like hamcrest, but i don't think the dependency (our first ever) was worth it on balance. haven't talked about it publicly tho.", [see this Twitter message](https://twitter.com/KentBeck/status/331422460371156992))
+This proved rather insufficient, and messages were not always very explicit, so later versions of JUnit expanded on those. By JUnit 3, there were 8 assertions methods, and finally, in JUnit 4.4, there was the addition of assertThat(), a generic assertion method based on Hamcrest ([quoting Kent Beck](https://twitter.com/KentBeck/status/331422460371156992): "@elefevre i like hamcrest, but i don't think the dependency (our first ever) was worth it on balance. haven't talked about it publicly tho."). This made developers aware of the existence of fluent APIs for verifying the results from their production code. These APIs are great, and I strongly recommend them for writing your tests.
 
 I am aware of 3 fluent assertion libraries:
 
@@ -374,11 +362,7 @@ I feel that AssertJ's style, although little different from Hamcrest's, is a bit
 Do not use logs
 ---------------
 
-It is well known that printing debug traces in the console from production code is bad practice [1]. The general recommendation is to use logs instead (although there is also some debate on that[2]). So it would seem natural to do the same on the test side.
-
-[1]: see [this thread](http://stackoverflow.com/questions/8601831/do-not-use-system-out-println-in-server-side-code), for example
-
-[2]: such as [this post](http://www.mockobjects.com/2007/04/test-smell-logging-is-also-feature.html) by Steve Freeman
+It is well known that printing debug traces in the console from production code is bad practice (see [this thread](http://stackoverflow.com/questions/8601831/do-not-use-system-out-println-in-server-side-code), for example). The general recommendation is to use logs instead (although there is also some debate on that, as in [this post](http://www.mockobjects.com/2007/04/test-smell-logging-is-also-feature.html) by Steve Freeman). So it would seem natural to do the same on the test side.
 
 The question is, what do you want logs in the tests for? Logs are generally used for diagnostic of unexpected events in production. There is no such need in tests. If your failing tests do not provide enough context, then you must refactor them to do so. Generally, this will mean making your assertions more clear. In the worst case, you might have to run your test via a debugger.
 
@@ -406,9 +390,7 @@ Today, there is no excuse for clutches like descriptions in your tests. Use spec
 Mock types that you do not control, as a first step
 ---------------------------------------------------
 
-Steve Freeman and Nat Pryce make a compeling case that you should only mock types that you own[1]. Although the reasoning is right, I do not feel this is the simplest possible thing.
-
-[1]: http://www.mockobjects.com/2008/11/only-mock-types-you-own-revisited.html
+Steve Freeman and Nat Pryce make a compeling case that you should only [mock types that you own](http://www.mockobjects.com/2008/11/only-mock-types-you-own-revisited.html). Although the reasoning is right, I do not feel this is the simplest possible thing.
 
 My approach is to mock even classes that I do not own. That is, I have no problem with injecting my services with objects external to the source code directly under my control.
 
