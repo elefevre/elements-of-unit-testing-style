@@ -515,7 +515,7 @@ This is rather ugly, so if this happens a couple of times for the same type, I t
         Store store = new Store(fileBuilder);
 
         @Test
-        public void should_save_data_to_the_store_file() throws IOException {
+        public void should_save_data_to_the_store_file() {
             when(fileBuilder.newFile("store")).thenReturn(file);
             
             store.save("data");
@@ -526,9 +526,37 @@ This is rather ugly, so if this happens a couple of times for the same type, I t
 Like wrappers, your builder classes should so simple that testing should not be necessary.
 
 
+Do not assume that the system is in a useable state
+---------------------------------------------------
+
+Many papers on unit tests advise ensuring that tests leave the system in a clean state. I do not necessarily agree with this view. Instead, I'd rather tests assume that the system is in a dirty state (within reason) and clean it themselves.
+
+        @Test
+        public void should_save_a_user_successfully() throws IOException {
+            store.clear(); // assuming that store is a shared resource
+
+            store.save(new User());
+
+            assertThat(store.countElements()).isEqualTo(1);
+        }
+
+A benefit is that, if one of your tests does fail, it won't affect the behavior of other tests (yes, I know that things like @After are there to help tests clean after themselves; this is not always enough or easy to write in a completely sage way. Plus, this makes for more elements to maintain around your tests).
+Another is that it puts in a single place everything that is necessary for your tests to run. No clicking around trying to figure out what might have happened before and fix a suspicious test that does not seem to close its resources properly.
+A final benefit, and this is the most important one, is that it shows what tests are candidates for refactoring. Having to call "store.clear()" is rather unfortunate and it makes the tests slightly uglier; would a better option be to make it into a mock object? This would also make your tests run faster. This sort of feedback is harder to obtain when cleanup code is hidden in special separate methods.
+
+
+Do not assume or impose that tests be run in a specific order
+-------------------------------------------------------------
+
+In the early days in JUnit, many teams I knew were trying to use every feature it provided (it had so few! they must all be have been useful, right?). That meant stuffing tests into "test suites". This was a pain because it was all too easy to forget to update the suite after a new test had been created. It was also too tempting to comment out a failing test, only to forget to uncomment it after fixing it.
+
+The worst is that it tempted developers to write tests that were expecting to be run in a certain order. For example, one test would populate the database, the following would check that a search was possible, and the last would check that deletion would work. In other words, those tests would be largely interdependent, difficult to parallelize, difficult to maintain (are you sure the 'delete' test has actually removed something? or was it that the other test just never properly populate the database?).
+
+My advice is to stop relying on such mecanism. Do not assume that tests will be run in a specific order. This will help you make them as independent of each other as possible. Which will also put pressure towards writing production code in small, independent modules.
+
+
 Stuff to work on
 ================
 
-* do not assume that the system is in a useable state
 * do not assume or impose that tests be run in a specific order
-* fix footnotes
+* what about functional tests?
