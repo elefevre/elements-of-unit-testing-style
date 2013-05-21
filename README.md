@@ -555,8 +555,9 @@ The worst is that it tempted developers to write tests that were expecting to be
 My advice is to stop relying on such mecanism. Do not assume that tests will be run in a specific order. This will help you make them as independent of each other as possible. Which will also put pressure towards writing production code in small, independent modules.
 
 
-Stuff to work on
-================
+What about functional tests?
+----------------------------
 
-* do not assume or impose that tests be run in a specific order
-* what about functional tests?
+All those rules apply to functional tests. That said, performance costs are greater for functional tests, as servers are started, test data are populated, etc.
+
+However, keeping those rules in mind helps me design tests that are easier to read and maintain. Often, I start by applying them strictly, particularly at the beginning of a project, and only slowly relax them as I have no choice but to speed up the build process to keep it under an acceptable duration.
