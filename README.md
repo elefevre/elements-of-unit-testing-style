@@ -248,7 +248,7 @@ I do not believe this makes code much easier to read. I'd rather see the followi
     assertThat(store.findByName("Eric").getName()).isEqualTo("Eric");
 
 It makes clearer that things are happening in distinct steps. First, we update the store with a new name. Later, when we search with a String that has the same value, then we get our previously stored element. Reusing the same variable for storage can create confusion ("is the underlying code comparing pointers and not values?"), and takes valuable space on screen.
-Note that I do not mind the risk of mistyping the hard-coded values. _The whole point of this test is that it will catch those problems._
+Note that I do not mind the risk of mistyping the hard-coded values. _The point of this test is that it will catch those problems._
 
 Note that this works for any data type you have, not just primitive types, as long as your data types have a properly implemented equals() method:
 
@@ -274,8 +274,8 @@ Aren't we losing the information provided by the name of the variable? Often, th
     assertThat(store.findByName("long name long name long name long name long name long name long name").getName()).isEqualTo("long name long name long name long name long name long name long name");
 
 
-Create local builder methods in test classes
---------------------------------------------
+Create dedicated builder methods within test classes
+----------------------------------------------------
 
 Some of the data classes used in my tests are sometimes a bit difficult to instantiate. In extreme situations, they can take several lines of code just for creating a single object.
 
@@ -317,13 +317,42 @@ If by chance there is ambiguity in the parameters necessary, it is easy to renam
 
 Note how those builder methods are private; I much prefer keep them specific to my test classes. In my projects, I have not found much value in factorizing them into some BackTestBuilder class (you might have realized by now that I put a lot of effort into avoiding coupling between test classes). These methods are also static. This is partly for aesthetic reasons (italics are nice), and also because it makes clearer that they should not be considered as part of the code currently under test.
 
-In the past, I also tended to created builder methods that take varargs (see [this post from 2011](http://ericlefevre.net/wordpress/2011/11/21/javas-varargs-are-for-unit-tests/) for more):
+In the past, I also tended to create builder methods that take varargs (see [this post from 2011](http://ericlefevre.net/wordpress/2011/11/21/javas-varargs-are-for-unit-tests/) for more):
 
     assertThat(findLongestName(users("a long name", "short name"))).isEqualTo(user("a long name"));
 
 Nowadays, I tend to write builder methods for single objects, and call them multiple times:
 
     assertThat(findLongestName(newArrayList(user("a long name"), user("short name"))).isEqualTo(user("a long name"));
+
+
+Test whole objects, not sub-parts
+---------------------------------
+
+I occasionally see tests that check whether an object has been modified:
+
+    Company company = oldCompany.addEmployee(new Employee("John"));
+
+    assertThat(company.getEmployees()).contains(new Employee("John"));
+
+The reasoning is that the test is more focused on the exact thing being tested. It might also be easier to write, as everything else in the object can be ignored.
+
+My problem with this approach is that it does not make obvious that the new object is a modified copy of the previous one. Also, it uses production code (the getEmployees() method) which might be computed out of some other data and might lead to unexpected behavior.
+
+I'd much prefer see the whole object being tested. I view data structures as self-contained, especially when they are immutable. The fact that it is sometimes possible to observe a portion of this object does not convey clearly that the entire new object is in a new state. Besides, getters are not always present, and I'd refrain from creating them just for the purpose of a test.
+
+My preference goes to code like this:
+
+    Company company = new Company().addEmployee(new Employee("John"));
+
+    List<Employee> employees = new ArrayList();
+    employees.add(new Employee("John"));
+    assertThat(company).isEqualTo(new Company(employees);
+
+This is rather ugly, though. Custom builders methods will help. With a bit of inlining, I usually end up pushing the following code:
+
+    assertThat(new Company().addEmployee(employee("John"))) //
+        .isEqualTo(new Company(newArrayList(employee("John")));
 
 
 Use assertion libraries
@@ -465,7 +494,7 @@ I often end with almost one wrapper class per helper class, especially those fro
 Should you test your wrapper classes? My advise is to make them so simple that testing should not be necessary.
 
 
-Use builders to mock classes instantiated in your production code
+Use factoris to help mock classes instantiated in production code
 -----------------------------------------------------------------
 
 Instantiating things in your production code is usually not a problem. You instantiate a new object, manipulate it, and use its result (or send it to another service). Reasonably easy to test.
@@ -487,7 +516,7 @@ In those situations, I usually start by extract the instantiation code in a loca
         ...
     }
 
-This is rather ugly, so if this happens a couple of times for the same type, I tend to quickly introduce a builder.
+This is rather ugly, so if this happens a couple of times for the same type, I tend to quickly introduce a factory.
 
     public class FileBuilder {
         public File newFile(String name) {
@@ -523,7 +552,7 @@ This is rather ugly, so if this happens a couple of times for the same type, I t
         }
     }
 
-Like wrappers, your builder classes should so simple that testing should not be necessary.
+Like wrappers, your builder classes should so simple that testing is not necessary.
 
 
 Do not assume that the system is in a useable state
@@ -550,7 +579,7 @@ Do not assume or impose that tests be run in a specific order
 
 In the early days in JUnit, many teams I knew were trying to use every feature it provided (it had so few! they must all be have been useful, right?). That meant stuffing tests into "test suites". This was a pain because it was all too easy to forget to update the suite after a new test had been created. It was also too tempting to comment out a failing test, only to forget to uncomment it after fixing it.
 
-The worst is that it tempted developers to write tests that were expecting to be run in a certain order. For example, one test would populate the database, the following would check that a search was possible, and the last would check that deletion would work. In other words, those tests would be largely interdependent, difficult to parallelize, difficult to maintain (are you sure the 'delete' test has actually removed something? or was it that the other test just never properly populate the database?).
+Worst is that it tempted developers to write tests that were expecting to be run in a certain order. For example, one test would populate the database, the following would check that a search was possible, and the last would check that deletion would work. In other words, those tests would be largely interdependent, difficult to parallelize, difficult to maintain (are you sure the 'delete' test has actually removed something? or was it that the other test just never properly populate the database?).
 
 My advice is to stop relying on such mecanism. Do not assume that tests will be run in a specific order. This will help you make them as independent of each other as possible. Which will also put pressure towards writing production code in small, independent modules.
 
@@ -561,3 +590,8 @@ What about functional tests?
 All those rules apply to functional tests. That said, performance costs are greater for functional tests, as servers are started, test data are populated, etc.
 
 However, keeping those rules in mind helps me design tests that are easier to read and maintain. Often, I start by applying them strictly, particularly at the beginning of a project, and only slowly relax them as I have no choice but to speed up the build process to keep it under an acceptable duration.
+
+
+TODO :
+* do not declare beans at the beginning of test classes
+* do not use calculated values in your expected values
