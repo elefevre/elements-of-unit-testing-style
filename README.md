@@ -35,10 +35,10 @@ The same advice applies when considering BDD frameworks with their own language 
 Finally, notice how proficient you are in your production code? That comes from years of practice. It also comes from a production development environment. Use those to your advantage.
 
 
-Tell a story using the test names
+Tell a story with the method name
 ---------------------------------
 
-There is actually dome (healthy) debate on how to name your test methods in a unit test class. My preference is to let my method names tell me a story. For this, I like my method names to start with a verb that lets me describe what will be tested, in functional terms if possible.
+There is actually some (healthy) debate on how to name your test methods in a unit test class. My preference is to let my method names tell me a story. For this, I like my method names to start with a verb that lets me describe what will be tested, in functional terms if possible.
 
 For example, here is a test method:
 
@@ -215,9 +215,9 @@ In light of this, I recommend avoiding annotations as much as possible. It is po
 Keep as much context as possible within your test method
 --------------------------------------------------------
 
-If you apply all the above tips, you will naturally find much code in your actual test methods. This is a good thing. As much as possible, everything your test needs should be right there in the test method. No hidden behavior. No magic scurrying around finding other pieces of context. No looking for external resource files directly loaded from the file system.
+If you apply all the above tips, you will naturally find much code in your actual test methods. This is a good thing. As much as possible, everything your test needs should be right there in the test method. No hidden behavior. No more scurrying around finding other pieces of context. No looking for external resource files directly loaded from the file system. Remove data declared at the beginning of your class and inline thel in your test methods.
 
-If your test method ends up being too long for your taste (how much is too long for a test method? 10 lines? 20?), then consider this a smell, not in your tests, but rather in your production code. Should split responsabilities among more classes? Tranform helper classes into mocked services?
+If your test method ends up being too long for your taste (how much is too long for a test method? 10 lines?), then consider this a smell, not in your tests, but rather in your production code. Guided by the feedback from your test, you should be able to write better production code. Should responsabilities be split among more classes? Should helper classes be made into services?
 
 This goal is very much achievable in unit tests. However, I've found them a lot harder in my integration tests, and many of them end up inheriting from rather complex abstract classes. It is still an ideal that you should keep in mind, though.
 
@@ -326,8 +326,8 @@ Nowadays, I tend to write builder methods for single objects, and call them mult
     assertThat(findLongestName(newArrayList(user("a long name"), user("short name"))).isEqualTo(user("a long name"));
 
 
-Test whole objects, not sub-parts
----------------------------------
+Test whole objects
+------------------
 
 I occasionally see tests that check whether an object has been modified:
 
@@ -593,5 +593,4 @@ However, keeping those rules in mind helps me design tests that are easier to re
 
 
 TODO :
-* do not declare beans at the beginning of test classes
 * do not use calculated values in your expected values
