@@ -57,8 +57,8 @@ The same advice applies when considering BDD frameworks that come with their own
 Finally, notice how proficient you are in your production code? That comes from years of practice. It also comes from a productive development environment. Use those to your advantage.
 
 
-Avoid branches in the test code
--------------------------------
+Avoid branches in test code
+---------------------------
 
 As opposed to production code, tests should describe a linear story. What things we start with, what we do with them, and what we get. Some call this the Given/When/Then pattern, others the Arrange/Act/Assert pattern. This means that the code should be written as a single thread that can be read with as little mental effort as possible.
 
@@ -229,8 +229,8 @@ If your test method ends up being too long for your taste (how much is too long 
 This goal is very much achievable in unit tests. However, I've found them a lot harder in my integration tests, and many of them end up inheriting from rather complex abstract classes. It is still an ideal that you should keep in mind, though.
 
 
-Avoid local variables in test methods
--------------------------------------
+Inline local variables in test methods
+--------------------------------------
 
 In production code, it is recommend to extract local variables to make their usage clearer.
 
@@ -279,6 +279,34 @@ Aren't we losing the information provided by the name of the variable? Often, th
     store.createUserWithName("long name long name long name long name long name long name long name");
 
     assertThat(store.findByName("long name long name long name long name long name long name long name").getName()).isEqualTo("long name long name long name long name long name long name long name");
+
+
+Use obvious values for test data
+--------------------------------
+
+If we are to inline values in test code, aren't we losing the information provided by the name of the variable? In situations when we need more context, I like to put that context in the value itself. When there is nothing special about the value, I simply reuse the name of the parameter as the value.
+
+For example:
+
+    // not recommended
+    String containsUppercaseCharacters = "AaBb";
+    assertThat(toLowerCase(containsUppercaseCharacters)).isEqualTo("aabb");
+
+    // better
+    assertThat(toLowerCase("Uppercase Characters")).isEqualTo("uppercase characters");
+
+    // not recommended
+    String name = "John";
+    String email = "john@site.com";
+    String url = "http://site.com/";
+    assertThat(createUser(name, email, site)).isEqualTo(new User("John", "john@site.com", "http://site.com/"));
+
+    // better
+    assertThat(createUser("name", "email", "site")).isEqualTo(new User("name", "email", "site"));
+
+If there are validation rules (such as verifying that the email address is wellformed), I do alter those rules a bit. But as little as I can.
+
+    assertThat(createUser("name", "email@site.extension", "http://site.extension/")).isEqualTo(new User("name", "email@site.extension", "http://site.extension/"));
 
 
 Create dedicated builder methods within test classes
@@ -598,3 +626,8 @@ All those rules apply to functional tests. That said, performance costs are grea
 
 However, keeping those rules in mind helps me design tests that are easier to read and maintain. Often, I start by applying them strictly, particularly at the beginning of a project, and only slowly relax them as I have no choice but to speed up the build process to keep it under an acceptable duration.
 
+TODO :
+
+* your assertion values should be independant from your test values (ie. chaing your test values should always fail, because your assertion values be have caught the change; and vice-versa)
+* aim for symetry between test methods
+* do not hide test data in your builders
