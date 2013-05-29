@@ -215,7 +215,13 @@ In light of this, I recommend avoiding annotations as much as possible. It is po
 Keep as much context as possible within your test method
 --------------------------------------------------------
 
-If you apply all the above tips, you will naturally find much code in your actual test methods. This is a good thing. As much as possible, everything your test needs should be right there in the test method. No hidden behavior. No more scurrying around finding other pieces of context. No looking for external resource files directly loaded from the file system. Remove data declared at the beginning of your class and inline thel in your test methods.
+If you apply all the above tips, you will naturally find much code in your actual test methods. This is a good thing. As much as possible, everything your test needs should be right there in the test method. No hidden behavior. No more scurrying around finding other pieces of context. No looking for external resource files directly loaded from the file system. 
+
+Some smells to look for:
+
+* data declared at the beginning of your test class (inline them in your test method)
+* calculated expected values (use literal values)
+* test data stored in files (inline them in your tests)
 
 If your test method ends up being too long for your taste (how much is too long for a test method? 10 lines?), then consider this a smell, not in your tests, but rather in your production code. Guided by the feedback from your test, you should be able to write better production code. Should responsabilities be split among more classes? Should helper classes be made into services?
 
@@ -591,6 +597,3 @@ All those rules apply to functional tests. That said, performance costs are grea
 
 However, keeping those rules in mind helps me design tests that are easier to read and maintain. Often, I start by applying them strictly, particularly at the beginning of a project, and only slowly relax them as I have no choice but to speed up the build process to keep it under an acceptable duration.
 
-
-TODO :
-* do not use calculated values in your expected values
