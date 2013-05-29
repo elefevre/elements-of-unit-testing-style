@@ -1,9 +1,9 @@
 Elements of unit testing style
 ==============================
 
-Many papers have been written on the process of writing unit tests, including using the test-first approach. Other papers describe what makes a good test, from the technical point of view (for more on this, see [this article](http://codebetter.com/jeremymiller/2005/07/20/qualities-of-a-good-unit-test/): tests should be atomic, independant, isolated, clear, easy and fast). In this chapter, I want to focus on the style of the resulting test. A form of coding standards, if you will, focused on the tests.
+Many papers have been written on the process of writing unit tests, including using a test-first approach. Other papers (such as [this article](http://codebetter.com/jeremymiller/2005/07/20/qualities-of-a-good-unit-test/) describe what makes a good test, from the technical point of view: tests should be atomic, independant, isolated, clear, easy and fast. In this chapter, I want to focus on the style of the resulting test. A form of coding standards, if you will, focused on the tests.
 
-Coding standards already exist. However, it is my conviction that the available ones apply best to production code. Rules are a bit different for tests. In the following, I describe what differing rules I use in my tests.
+Coding standards already exist, of course. However, it is my conviction that the available ones apply best to production code. Rules are a bit different for tests. In the following, I describe what rules I use in my tests.
 
 
 Name test methods with underscores
@@ -14,31 +14,16 @@ In production code, common coding standards for Java code recommend writing meth
     retrieveUserDetails()
     createABankAccount()
 
-This makes sense when those methods are called. It feels as if requests are being made by the user of the objects (dear "bankTeller.createABankAccount()", please). However, methods in unit tests are not called by our code. They do not need to represent requests. They do need to tell a story. This story is best told using underscore.
+This makes sense when those methods are called. It feels as if requests are being made by the user of the objects (dear "bankTeller.createABankAccount()", please). However, methods in unit tests are not called by our own code. They do not need to represent requests. They do need to tell a story, and this story is best told using underscore.
 
     should_search_by_name_address()
     cannot_fail_when_address_is_not_specified()
 
 
-Work with a test framework idiomatic to your programming language
------------------------------------------------------------------
-
-If you code in Java, test in Java. In JavaScript, test in JavaScript. Ideally with a test framework that lets you write your unit tests in a way that does not feel contrived (or constrained) compared to writing production code.
-For example, until its version 4.0, JUnit required test classed to inherit from a special class, TestCase, and that test methods started with a special prefix 'test'. Although a good framework, these constraints felt rather arbitrary (in truth, they were present for technical reasons; it did feel like putting too much constraint on the developer, though) and were replaced with annotations in later versions of JUnit.
-
-
-In contrast, unit testing your production language in a different language (as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example) will require you to adjust your mental state every time you switch from production code to unit test code. Instead, we want as seamless transition as possible, as we'll frequently go from one to the other, especially when practicing TDD.
-
-
-The same advice applies when considering BDD frameworks with their own language or formalism such as Cucumber and FitNesse. Although those may have value as acceptance test environments, using them for unit testing will slow down the feedback cycle created by quickly going from reading/writing tests to reading/writing production code.
-
-Finally, notice how proficient you are in your production code? That comes from years of practice. It also comes from a production development environment. Use those to your advantage.
-
-
 Tell a story with the method name
 ---------------------------------
 
-There is actually some (healthy) debate on how to name your test methods in a unit test class. My preference is to let my method names tell me a story. For this, I like my method names to start with a verb that lets me describe what will be tested, in functional terms if possible.
+There is actually some (healthy) debate on how to name your test methods in a unit test class. My preference is to let my method names tell a story. For this, I like my method names to start with a verb that lets me describe what will be tested, in functional terms if possible. I write grammatically-correct sentences, complete with articles and plurals.
 
 For example, here is a test method:
 
@@ -49,19 +34,33 @@ For example, here is a test method:
         }
     }
 
-What I read, half-unconsciously, is "The class LocalBusinessResource should limit the number of search matches to 20, by default." The test itself will lay the technical details, and I'll make sure that the figure "20" will appear somewhere, in order to make the whole thing as obvious as possible. However, the method name tells me the general functional contract, and will avoid detailing the implementation (although I'll admit we are getting close).
+What I read, half-unconsciously, is "The class LocalBusinessResource should limit the number of search matches to 20, by default." The test itself will expose the technical details, and I'll make sure that the figure "20" will appear somewhere, in order to make the whole thing as obvious as possible. However, the method name tells me the general functional contract, and will avoid detailing the implementation.
 
-Starting with "should" or "can" helps in this regard. Some authors advocate starting with ["fact"](https://github.com/marick/Midje) or following a [UnitOfWork\_StateUnderTest\_ExpectedBehavior](http://osherove.com/blog/2005/4/3/naming-standards-for-unit-tests.html) pattern. I feel it makes the flow of the story less natural, though.
+Starting with "should" or "can" helps in this regard. Some authors advocate starting with ["fact"](https://github.com/marick/Midje) or following a [UnitOfWork\_StateUnderTest\_ExpectedBehavior](http://osherove.com/blog/2005/4/3/naming-standards-for-unit-tests.html) pattern. I feel it makes the flow of the story less fluid, though.
 
-One drawback of this style is that method names are longer than is usual. I have never found this to be an issue in practice. Only on rare occasions do the names reach more than 100, which is very acceptable. On balance, I'd recommend using long, descriptive names.
+One drawback of this style is that method names are longer than is usual. I have never found this to be an issue in practice. Only on rare occasions do the names reach more than 100 characters, which is very acceptable.
 
 For more about using "should", check out some of Liz Keogh's posts, such as [this one](http://lizkeogh.com/2005/03/14/the-should-vs-will-debate-or-why-doubt-is-good/).
+
+
+Work with a test framework idiomatic to your programming language
+-----------------------------------------------------------------
+
+Code in Java, test in Java. In JavaScript, test in JavaScript. Ideally with a test framework that lets you write your unit tests in a way that does not feel contrived or constrained compared to writing production code.
+
+For example, until its version 4.0, JUnit required that test classes to extend a special class, TestCase, and that test methods started with a special prefix. These constraints felt rather arbitrary (in truth, they were present for technical reasons) and were replaced with annotations in later versions of JUnit.
+
+In contrast, unit testing your production language in a different language (as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example) will require you to adjust your mental state every time you switch from production code to unit test code. Instead, we want as seamless a transition as possible, as we'll frequently switch from one to the other, especially when practicing TDD.
+
+The same advice applies when considering BDD frameworks that come with their own language or formalism such as Cucumber and FitNesse. Although those may have value as acceptance test environments, using them for unit testing will slow down the feedback cycle created by quickly going from reading/writing tests to reading/writing production code.
+
+Finally, notice how proficient you are in your production code? That comes from years of practice. It also comes from a productive development environment. Use those to your advantage.
 
 
 Avoid branches in the test code
 -------------------------------
 
-As opposed to production code, tests should describe a linear story. What things we start with, what we do with them, and what we get (some call this the Given/When/Then pattern, others the Arrange/Act/Assert pattern). This means that the code would be written as a single branch that can be read with as little mental effort as possible.
+As opposed to production code, tests should describe a linear story. What things we start with, what we do with them, and what we get. Some call this the Given/When/Then pattern, others the Arrange/Act/Assert pattern. This means that the code should be written as a single thread that can be read with as little mental effort as possible.
 
 Although it might seem obvious in simple cases, it also means that, for example, you should avoid loops when initializing your test data:
 
@@ -75,8 +74,10 @@ Although it might seem obvious in simple cases, it also means that, for example,
         list.add("string");
         list.add("string"); // 5
         list.add("string"); // 6
+
+        Store store = new Store(list);
         
-        assertThat(search.findByName("")).hasSize(6);
+        assertThat(store.findByName("string")).hasSize(5);
     }
 
 Similarly, avoid try/catch clauses. In older versions of JUnit, making sure that an exception was thrown meant writing code like this:
@@ -96,9 +97,9 @@ Since JUnit 4.0, this can be refactored as:
     public void can_limit_search_results_to_ten() {
         search.findByName("an invalid name");
     }
-This has the added benefit of a more explicit error message.
+This has the added benefit of a more explicit error message from JUnit.
 
-What of you need to check the content of the exception message? JUnit 4 does offer a mechanism for this (see the [ExpectedException Rule](https://github.com/junit-team/junit/wiki/Exception-testing#expectedexception-rule), but I find it a little cumbersome. I prefer the [catch exception library](https://code.google.com/p/catch-exception/):
+What of you need to check the content of the exception message? JUnit 4 does offer a mechanism for this (see the [ExpectedException Rule](https://github.com/junit-team/junit/wiki/Exception-testing#expectedexception-rule), but I find it rather cumbersome. I prefer the [catch exception library](https://code.google.com/p/catch-exception/):
 
     public void can_fail_when_searching_on_an_invalid_name() {
         catchException(search).findByName("an invalid name");
