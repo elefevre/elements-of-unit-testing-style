@@ -559,8 +559,8 @@ I often end with almost one wrapper class per helper class, especially those fro
 Should you test your wrapper classes? My advise is to make them so simple that testing should not be necessary.
 
 
-Use factoris to help mock classes instantiated in production code
------------------------------------------------------------------
+Use factories to mock classes instantiated in production code
+-------------------------------------------------------------
 
 Instantiating things in your production code is usually not a problem. You instantiate a new object, manipulate it, and use its result (or send it to another service). Reasonably easy to test.
 
@@ -649,6 +649,50 @@ Worst is that it tempted developers to write tests that were expecting to be run
 My advice is to stop relying on such mecanism. Do not assume that tests will be run in a specific order. This will help you make them as independent of each other as possible. Which will also put pressure towards writing production code in small, independent modules.
 
 
+Aim for symetry between test methods
+------------------------------------
+
+Symetry is a powerful means to push towards better design. Is one of your public API method in production different from the other methods in the same class? Maybe it should be moved to another place.
+
+Similarly, I like to keep my test methods similar. If one or two of them are different from the others, it makes my test uglier. It is also probably a sign that you need to refactor your production code.
+
+    @Test
+    public void should_update_point_of_interest_with_new_data()
+    {
+        when(geocoder.geocode("address")).thenReturn("address");
+        when(entities.findById("id")).thenReturn(new PointOfInterest());
+
+        resource.updatePointOfInterestWith("id", new Identity("name"));
+
+        verify(entities).save(new PointOfInterest().withIdentity("name"));
+    }
+
+    @Test
+    public void should_geocode_addresses_before_save()
+    {
+        when(geocoder.geocode("address")).thenReturn("geocoded address");
+        when(entities.findById("id")).thenReturn(new PointOfInterest());
+
+        resource.updatePointOfInterestWith("id", new Address("address"));
+
+        verify(entities).save(new PointOfInterest().withAddress("geocoded address"));
+    }
+
+    // the following test looks strange compared to the other two
+    // is the tested class the right place to implement this feature?
+    @Test
+    public void should_bump_visibility_of_point_of_interests_from_priviledged_partners()
+    {
+        when(partners.findAll()).thenReturn(newArrayList(new Partner("partner")));
+        when(geocoder.geocode("address")).thenReturn("address");
+        when(entities.findById("id")).thenReturn(new PointOfInterest());
+
+        resource.updatePointOfInterestWith("id", new Identity("name (partner)"));
+
+        verify(entities).save(new PointOfInterest().withIdentity("name").withHighVisibility());
+    }
+
+
 What about functional tests?
 ----------------------------
 
@@ -658,5 +702,4 @@ However, keeping those rules in mind helps me design tests that are easier to re
 
 TODO :
 
-* your assertion values should be independant from your test values (ie. chaing your test values should always fail, because your assertion values be have caught the change; and vice-versa)
-* aim for symetry between test methods
+* "Write self-verifying tests": your assertion values should be independent from your test values (ie. changing your test values should always fail, because your assertion values be have caught the change; and vice-versa)
