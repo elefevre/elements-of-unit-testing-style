@@ -361,6 +361,36 @@ Nowadays, I tend to write builder methods for single objects, and call them mult
     assertThat(findLongestName(newArrayList(user("a long name"), user("short name"))).isEqualTo(user("a long name"));
 
 
+Do not hide test data in your builder methods
+---------------------------------------------
+
+One drawback of leaving builders closer to the tests is the temptation to put test data in the builder methods:
+
+    @Test
+    public void should_turn_the_username_to_lowercase() {
+        assertThat(toLowerCase(user()))).isEqualTo(new User("name"));
+    }
+
+    private static User user() {
+        return new User("NAME", "company");
+    }
+
+    private static User user(String name) {
+        return new User(name, "company");
+    }
+
+In the spirit of keeping all the knowledge into the test method, I strongly recommend leaving all significant data in the test method. Only data irrelevant to the current should be left in the builder method.
+
+    @Test
+    public void should_turn_the_username_to_lowercase() {
+        assertThat(toLowerCase(user("NAME")))).isEqualTo(new User("name"));
+    }
+
+    private static User user(String name) {
+        return new User(name, "company");
+    }
+
+
 Test whole objects
 ------------------
 
@@ -630,4 +660,3 @@ TODO :
 
 * your assertion values should be independant from your test values (ie. chaing your test values should always fail, because your assertion values be have caught the change; and vice-versa)
 * aim for symetry between test methods
-* do not hide test data in your builders
