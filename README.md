@@ -1,20 +1,21 @@
 Elements of unit testing style
 ==============================
 
-Many papers have been written on the process of writing unit tests, including using a test-first approach. Other papers (such as [this article](http://codebetter.com/jeremymiller/2005/07/20/qualities-of-a-good-unit-test/) describe what makes a good test, from the technical point of view: tests should be atomic, independant, isolated, clear, easy and fast. In this chapter, I want to focus on the style of the resulting test. A form of coding standards, if you will, focused on the tests.
+Many papers have been written on the process of writing unit tests, including using a test-first approach. Other papers (such as [this article](http://codebetter.com/jeremymiller/2005/07/20/qualities-of-a-good-unit-test/) describe what makes a good test from a technical point of view: tests should be atomic, independant, isolated, clear, easy and fast. In this chapter, I want to focus on the style of the resulting tests. A form of coding standards, if you will.
 
-Coding standards already exist, of course. However, it is my conviction that the available ones apply best to production code. Rules are a bit different for tests. In the following, I describe what rules I use in my tests.
+Coding standards already exist, of course. However, it is my conviction that the available ones apply best to production code and that rules are a bit different for tests. In the following, I describe which rules I use in my tests.
 
+Note that these apply specifically to unit tests. Integration-level tests are discussed briefly at the end of this chapter.
 
 Name test methods with underscores
 ----------------------------------
 
-In production code, common coding standards for Java code recommend writing method names in CamelCase.
+In production code, common coding standards for Java recommend writing method names in CamelCase.
 
     retrieveUserDetails()
     createABankAccount()
 
-This makes sense when those methods are called. It feels as if requests are being made by the user of the objects (dear "bankTeller.createABankAccount()", please). However, methods in unit tests are not called by our own code. They do not need to represent requests. They do need to tell a story, and this story is best told using underscore.
+This makes sense when those methods are called from our own code. It feels as if requests are being made to these objects (dear "bankTeller.createABankAccount()", please). However, methods in unit tests are not called by us. They do not need to represent requests. They do need to tell a story, and this story is best told using underscore.
 
     should_search_by_name_address()
     cannot_fail_when_address_is_not_specified()
@@ -36,9 +37,9 @@ For example, here is a test method:
 
 What I read, half-unconsciously, is "The class LocalBusinessResource should limit the number of search matches to 20, by default." The test itself will expose the technical details, and I'll make sure that the figure "20" will appear somewhere, in order to make the whole thing as obvious as possible. However, the method name tells me the general functional contract, and will avoid detailing the implementation.
 
-Starting with "should" or "can" helps in this regard. Some authors advocate starting with ["fact"](https://github.com/marick/Midje) or following a [UnitOfWork\_StateUnderTest\_ExpectedBehavior](http://osherove.com/blog/2005/4/3/naming-standards-for-unit-tests.html) pattern. I feel it makes the flow of the story less fluid, though.
+Starting with "should" or "can" helps in this regard. Some authors prefer starting with ["fact"](https://github.com/marick/Midje) or following a [UnitOfWork\_StateUnderTest\_ExpectedBehavior](http://osherove.com/blog/2005/4/3/naming-standards-for-unit-tests.html) pattern. I feel it makes the flow of the story less fluid, though.
 
-One drawback of this style is that method names are longer than is usual. I have never found this to be an issue in practice. Only on rare occasions do the names reach more than 100 characters, which is very acceptable.
+One drawback of this style is that method names are longer than is usual. I have never found this to be an issue in practice; only on rare occasions do the names reach more than 100 characters, which is quite acceptable.
 
 For more about using "should", check out some of Liz Keogh's posts, such as [this one](http://lizkeogh.com/2005/03/14/the-should-vs-will-debate-or-why-doubt-is-good/).
 
@@ -46,13 +47,13 @@ For more about using "should", check out some of Liz Keogh's posts, such as [thi
 Work with a test framework idiomatic to your programming language
 -----------------------------------------------------------------
 
-Code in Java, test in Java. In JavaScript, test in JavaScript. Ideally with a test framework that lets you write your unit tests in a way that does not feel contrived or constrained compared to writing production code.
+Code in Java, test in Java. With JavaScript, test in JavaScript. Ideally with a test framework that lets you write your unit tests in a way that does not feel contrived or constrained compared to writing production code.
 
-For example, until its version 4.0, JUnit required that test classes to extend a special class, TestCase, and that test methods started with a special prefix. These constraints felt rather arbitrary (in truth, they were present for technical reasons) and were replaced with annotations in later versions of JUnit.
+For example, until version 4.0, JUnit required that test classes extend a special class, TestCase, and that test methods start with a special prefix. These constraints felt rather arbitrary (in truth, they were present mostly for technical reasons) and were replaced with annotations in later versions of JUnit.
 
-In contrast, unit testing your production language in a different language (as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example) will require you to adjust your mental state every time you switch from production code to unit test code. Instead, we want as seamless a transition as possible, as we'll frequently switch from one to the other, especially when practicing TDD.
+In contrast, unit testing your production language in a different language (as advocated [here](http://www.ibm.com/developerworks/java/library/j-pg11094/), for example) will require you to adjust your mental state every time you switch from production code to unit test code. Instead, we want as seamless a transition as possible, as we'll frequently switch from one to the other, especially when practicing test-first style.
 
-The same advice applies when considering BDD frameworks that come with their own language or formalism such as Cucumber and FitNesse. Although those may have value as acceptance test environments, using them for unit testing will slow down the feedback cycle created by quickly going from reading/writing tests to reading/writing production code.
+The same advice applies when considering Behavior-Drive Development (BDD) frameworks that come with their own language or formalism such as Cucumber and FitNesse. Although those may have value as acceptance test environments, using them for unit testing will slow down the feedback cycle created by quickly going from reading/writing tests to reading/writing production code.
 
 Finally, notice how proficient you are in your production code? That comes from years of practice. It also comes from a productive development environment. Use those to your advantage.
 
@@ -66,13 +67,13 @@ Although it might seem obvious in simple cases, it also means that, for example,
 
     public void can_limit_search_results_to_5()
     {
-        // I recommend this over loops
+        // I recommend this over a for-loop
         List<String> list = new ArrayList<String>();
         list.add("string");
         list.add("string");
         list.add("string");
         list.add("string");
-        list.add("string"); // 5
+        list.add("string");
         list.add("string"); // 6
 
         Store store = new Store(list);
@@ -80,7 +81,7 @@ Although it might seem obvious in simple cases, it also means that, for example,
         assertThat(store.findByName("string")).hasSize(5);
     }
 
-Similarly, avoid try/catch clauses. In older versions of JUnit, making sure that an exception was thrown meant writing code like this:
+Similarly, avoid try/catch blocks. In older versions of JUnit, in order to check that an exception was, you had to write code like this:
 
     public void can_fail_when_searching_on_an_invalid_name() {
         try {
@@ -97,46 +98,44 @@ Since JUnit 4.0, this can be refactored as:
     public void can_limit_search_results_to_ten() {
         search.findByName("an invalid name");
     }
-This has the added benefit of a more explicit error message from JUnit.
+This has the added benefit of producing a more explicit error message from JUnit when the test fails.
 
-What of you need to check the content of the exception message? JUnit 4 does offer a mechanism for this (see the [ExpectedException Rule](https://github.com/junit-team/junit/wiki/Exception-testing#expectedexception-rule), but I find it rather cumbersome. I prefer the [catch exception library](https://code.google.com/p/catch-exception/):
+What if you need to check the content of the exception message? JUnit 4 does offer a [mechanism for this](https://github.com/junit-team/junit/wiki/Exception-testing#expectedexception-rule), but I find it rather cumbersome. I prefer the [catch exception library](https://code.google.com/p/catch-exception/):
 
     public void can_fail_when_searching_on_an_invalid_name() {
         catchException(search).findByName("an invalid name");
 
         assertThat(caughtException()).isInstanceOf(RuntimeException.class);
-        assertThat(caughtException()).hasMessage("Invalid name");
+        assertThat(caughtException()).hasMessage("Name is invalid");
     }
 
 
 Duplicate code (sparingly)
 --------------------------
 
-It is my belief that as much care should be given to the code in the test as to the code in production. However, as already shown in this paper, I do not think that exactly the same rules apply.
+It is my belief that as much care should be given to the test as to the production code. However, as already shown in this paper, I do not think that exactly the same rules apply.
 
 In particular, I think it is a lot more acceptable to duplicate code in your tests:
 
     @Test
-    public void should_limit_matches_to_100_meters_when_street_is_specified()
-    {
+    public void should_limit_matches_to_100_meters_when_street_is_specified() {
         when(geocoder.geocode("Country", "City", "Street")).thenReturn(new Coordinate(1., 1.));
-        when(allPois.withinCircle(new Coordinate(1., 1.), 100.0)).thenReturn(newArrayList(new Business("Restaurant")));
+        when(pointsOfInterests.findWithinRange(new Coordinate(1., 1.), 100.0)).thenReturn(newArrayList(new Business("Restaurant")));
 
-        assertThat(localBusinessResource.searchBusinesses("Country", "City", "Street"))//
+        assertThat(localBusinessResource.searchBusinesses("Country", "City", "Street")) //
                 .contains(new Business("Restaurant"));
     }
 
     @Test
-    public void should_limit_matches_to_100_meters_when_street_is_specified()
-    {
+    public void should_limit_matches_to_5000_meters_when_street_is_omitted() {
         when(geocoder.geocode("Country", "City", "Street")).thenReturn(new Coordinate(1., 1.));
-        when(allPois.withinCircle(new Coordinate(1., 1.), 5000.0)).thenReturn(newArrayList(new Business("Restaurant")));
+        when(pointsOfInterests.findWithinRange(new Coordinate(1., 1.), 5000.0)).thenReturn(newArrayList(new Business("Restaurant")));
 
-        assertThat(localBusinessResource.searchBusinesses("Country", "City", "Street"))//
+        assertThat(localBusinessResource.searchBusinesses("Country", "City", null)) //
                 .contains(new Business("Restaurant"));
     }
 
-In this situation, I much prefer duplicate lines of code, rather than hide my test setup.
+In this situation, I much prefer to duplicate lines of code, rather than hide my test setup.
 
 Some people like to have an initial unit test that sets things up, and checks for basic behavior. And then call this test from other, more intricate tests.
 
@@ -160,17 +159,19 @@ Some people like to have an initial unit test that sets things up, and checks fo
         assertThat(messages).isEmpty();
     }
 
-I am very much opposed to this technique, as it makes a lot less clear what is being tested, and what might actually break. My preference goes to duplicating code. If it seems too painful to do so, then it is probably a sign that production code should be refactored. Only at the last resort would I start to factorize initialization code into a separate methods. Never would I call another test.
+I am very much opposed to this technique, as it makes a lot less clear what is being tested, and what might actually break. My preference goes to duplicating code.
+
+Lastly, if it seems too painful to do so (that is, it feels wrong doing so), then it is probably a sign that production code should be refactored. Only at the last resort would I start to factorize initialization code into separate methods. Certainly, I would never call another test.
 
 
 Reduce reliance on setup/teardown methods
 -----------------------------------------
 
-JUnit provides optional @Before/@After annotations to mark some methods for running before or after all other test methods (there are also @BeforeClass/@AfterClass that will be run just once, before or after all other test methods). These used to be know as the setUp() and tearDown() methods in previous versions of JUnit.
+JUnit provides optional @Before/@After annotations to mark some methods for running before or after all other test methods (there are also @BeforeClass/@AfterClass that will be run just once, before or after all other test methods). These used to be know as the setUp() and tearDown() methods in older versions of JUnit.
 
-Any code in there is code that won't be considered when reading a test. And, if read, might also break the flow of reading the story told by the test. As much as possible, do not use those methods.
+Any code in there is code that won't be considered by the developer when reading a test. And, if read, it might also break the flow of reading the story told by the test. As much as possible, do not use those methods.
 
-As an alternative, I tend to put some things as initialization of instance variables, usually simply the instanciation of the class under test, plus sometimes initialization of a few mock objects. Initialization of instance variables is a lot more limiting than code in methods, and that's partly the point. Code there (code common to all test methods) should be glaringly simple. If I'm forced to move things to the @Before method (because initialization requires complex manipulation), then it is a code smell.
+As an alternative, I tend to put some things as initialization of instance variables. Those are typically an instance for the class under test, plus one instance for each mock object. Initialization of instance variables is a lot more limiting than code in methods, and that's partly the point. Code there (code common to all test methods) should be glaringly simple. If I'm forced to move things to the @Before method (because initialization requires complex manipulation), then it is a code smell.
 
     Geocoder geocoder = mock(Geocoder.class);
     PointOfInterests pois = mock(PointOfInterests.class);
