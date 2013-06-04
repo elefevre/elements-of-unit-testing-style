@@ -61,7 +61,7 @@ Finally, notice how proficient you are in your production code? That comes from 
 Avoid branches in test code
 ---------------------------
 
-As opposed to production code, tests should describe a linear story. What things we start with, what we do with them, and what we get. Some call this the Given/When/Then pattern, others the Arrange/Act/Assert pattern. This means that the code should be written as a single thread that can be read with as little mental effort as possible.
+Tests should describe a linear story, as opposed to production code. What things we start with, what we do with them, and what we get. Some call this the Given/When/Then pattern, others the Arrange/Act/Assert pattern. This means that the code should be written as a single thread that can be read with as little mental effort as possible.
 
 Although it might seem obvious in simple cases, it also means that, for example, you should avoid loops when initializing your test data:
 
@@ -113,7 +113,7 @@ What if you need to check the content of the exception message? JUnit 4 does off
 Duplicate code (sparingly)
 --------------------------
 
-It is my belief that as much care should be given to the test as to the production code. However, as already shown in this paper, I do not think that exactly the same rules apply.
+It is my belief that as much care should be given to the tests as to the production code. However, as already shown in this paper, I do not think that exactly the same rules apply.
 
 In particular, I think it is a lot more acceptable to duplicate code in your tests:
 
@@ -137,7 +137,7 @@ In particular, I think it is a lot more acceptable to duplicate code in your tes
 
 In this situation, I much prefer to duplicate lines of code, rather than hide my test setup.
 
-Some people like to have an initial unit test that sets things up, and checks for basic behavior. And then call this test from other, more intricate tests.
+Some people like to have an initial unit test that sets things up, and checks for basic behavior, and then call this test from other, more intricate tests.
 
     private Messages messages = new Messages();
 
@@ -159,9 +159,9 @@ Some people like to have an initial unit test that sets things up, and checks fo
         assertThat(messages).isEmpty();
     }
 
-I am very much opposed to this technique, as it makes a lot less clear what is being tested, and what might actually break. My preference goes to duplicating code.
+I am very much opposed to this technique, as it makes a lot less clear what is being tested, and what might actually break. My preference is to duplicate code instead.
 
-Lastly, if it seems too painful to do so (that is, it feels wrong doing so), then it is probably a sign that production code should be refactored. Only at the last resort would I start to factorize initialization code into separate methods. Certainly, I would never call another test.
+Lastly, if it seems too painful to do this (that is, it feels wrong doing so), then it is probably a sign that production code should be refactored. Only as a last resort would I start to factorize initialization code into separate methods. Certainly, I would never call another test.
 
 
 Reduce reliance on setup/teardown methods
@@ -169,7 +169,7 @@ Reduce reliance on setup/teardown methods
 
 JUnit provides optional @Before/@After annotations to mark some methods for running before or after all other test methods (there are also @BeforeClass/@AfterClass that will be run just once, before or after all other test methods). These used to be know as the setUp() and tearDown() methods in older versions of JUnit.
 
-Any code in there is code that won't be considered by the developer when reading a test. And, if read, it might also break the flow of reading the story told by the test. As much as possible, do not use those methods.
+Any code in there is code that won't be considered by the developer when reading a test. And, if read, it might also break the flow of reading the story told by the test. As much as possible, avoid using these methods.
 
 As an alternative, I tend to put some things as initialization of instance variables. Those are typically an instance for the class under test, plus one instance for each mock object. Initialization of instance variables is a lot more limiting than code in methods, and that's partly the point. Code there (code common to all test methods) should be glaringly simple. If I'm forced to move things to the @Before method (because initialization requires complex manipulation), then it is a code smell.
 
@@ -203,9 +203,9 @@ Some annotations are necessary for your test to run, particularly @Test. However
         }
     }
 
-Found it? This is rather subtle. You see, the @Mock annotation, as expected, assigns a mock to the annotated instance variable. However, it does so _after_ the test class has been instanciated. In other words, _after_ PointOfInterestFinder, the class under test here, has been instantiated. So our finder has been passed only null values in its constructor. Even if the mocks are actually instantiated by the time the test method is called, it is too late for the instance variable created earlier.
+Found it? This is rather subtle. You see, the @Mock annotation, as expected, assigns a mock to the annotated instance variable. However, it does so _after_ the test class has been instantiated. In other words, _after_ PointOfInterestFinder, the class under test here, has been instantiated. So our finder has been passed only null values in its constructor. Even if the mocks are actually instantiated by the time the test method is called, it is too late for the instance variable created earlier.
 
-A fix is to introduce an @Before method (4 lines of code). Another is to use yet another annotation, @InjectMocks, on the instance variable representing our class under test. However, this also comes with its own set of quirks and limitations (among other things, it will fail silently if you do not remove the call to the constructor, guess, and sometimes fail, what to pass as parameters to the constructor, guess and saometimes fail which constructor to use, pass null when the dependency is not provided, etc.). This is sufficently unexpected to be the origin of a good proportion of the requests for help on the Mockito mailing list. My answer is almost always to avoid all those annotations altogether (see [this thread](https://groups.google.com/d/topic/mockito/Kik9Pt3kW6k/discussion) for example).
+A fix is to introduce an @Before method (four lines of code). Another is to use yet another annotation, @InjectMocks, on the instance variable representing our class under test. However, this also comes with its own set of quirks and limitations (among other things, it will fail silently if you do not remove the call to the constructor, guess, and sometimes fail, what to pass as parameters to the constructor, guess and saometimes fail which constructor to use, pass null when the dependency is not provided, etc). This is sufficently unexpected to be the origin of a good proportion of the requests for help on the Mockito mailing list. My answer is almost always to avoid all those annotations altogether (see [this thread](https://groups.google.com/d/topic/mockito/Kik9Pt3kW6k/discussion) for example).
 
 These problems are not due to Mockito itself. They are technical limitation from the Java environment. However, other annotations, at the very best, tends to make their intentions unclear. The @Rule annotation from JUnit 4.7 *XXXXXXXXXXXXXXXXXcheckXXXXXXXXXXXXXXX*, for example, is presented (by Kent Beck, no less) as a good way to create resources that must be created safely before a test method and, more importantly, must be shut down cleanly (in effect partly replacing the need for @Before/@After methods). However, few people find this easy to understand. @Before/@After methods are probably the more intuitive way (especially for newcomers on the code base) to go in general.
 
@@ -321,7 +321,7 @@ Some of the data classes used in my tests are sometimes a bit difficult to insta
 
 Not all of this is relevant for the test you are currently considering. What you want is to see only the parameters that have an impact in the current context.
 
-Over the years, I have used several strategies to work around this. One option is to pass nulls, except for the parameter you are interested in, but the remaining might still be too distracting. Another is to provide an [Object Mother](http://martinfowler.com/bliki/ObjectMother.html), a class that have pre-configured objects; this is the solution I like the least, as it creates indirect coupling between tests. Yet another idea is to provide several constructors in the classes being instantiated; this have limitations, though, as not all combinaisons of parameters are possible.
+Over the years, I have used several strategies to work around this. One option is to pass nulls, except for the parameter you are interested in, but what remains might still be too distracting. Another strategy is to provide an [Object Mother](http://martinfowler.com/bliki/ObjectMother.html), a class that has pre-configured objects; this is the solution I like the least, as it creates indirect coupling between tests. Yet another idea is to provide several constructors in the classes being instantiated; this has limitations, though, as not all combinaisons of parameters are possible.
 
 In the end, I've settled on builder methods _inside my test classes_. They would come in as many flavors as needed for my test class:
 
@@ -415,7 +415,7 @@ My preference goes to code like this:
     employees.add(new Employee("John"));
     assertThat(company).isEqualTo(new Company(employees);
 
-This is rather ugly, though. Custom builders methods will help. With a bit of inlining, I usually end up pushing the following code:
+This is rather ugly though. Custom builders methods will help. With a bit of inlining, I usually end up pushing the following code:
 
     assertThat(new Company().addEmployee(employee("John"))) //
         .isEqualTo(new Company(newArrayList(employee("John")));
@@ -432,7 +432,7 @@ Assertions are ways to express the verifications to be done after exercizing you
 
 This proved rather insufficient, and messages were not always very explicit, so later versions of JUnit expanded on those. By JUnit 3, there were 8 assertions methods, and finally, in JUnit 4.4, there was the addition of assertThat(), a generic assertion method based on Hamcrest ([quoting Kent Beck](https://twitter.com/KentBeck/status/331422460371156992): "@elefevre i like hamcrest, but i don't think the dependency (our first ever) was worth it on balance. haven't talked about it publicly tho."). This made developers aware of the existence of fluent APIs for verifying the results from their production code. These APIs are great, and I strongly recommend them for writing your tests.
 
-I am aware of 3 fluent assertion libraries:
+I am aware of three fluent assertion libraries:
 
 * Hamcrest, a version of which is included in JUnit 4.4 and later 
 * FEST Assert
@@ -459,9 +459,9 @@ Do not use logs
 
 It is well known that printing debug traces in the console from production code is bad practice (see [this thread](http://stackoverflow.com/questions/8601831/do-not-use-system-out-println-in-server-side-code), for example). The general recommendation is to use logs instead (although there is also some debate on that, as in [this post](http://www.mockobjects.com/2007/04/test-smell-logging-is-also-feature.html) by Steve Freeman). So it would seem natural to do the same on the test side.
 
-The question is, what do you want logs in the tests for? Logs are generally used for diagnostic of unexpected events in production. There is no such need in tests. If your failing tests do not provide enough context, then you must refactor them to do so. Generally, this will mean making your assertions more clear. In the worst case, you might have to run your test via a debugger.
+The question is, what do you want logs in the tests for? Logs are generally used for diagnosing unexpected events in production. There is no such need in tests. If your failing tests do not provide enough context, then you must refactor them to do so. Generally, this will mean making your assertions clearer. In the worst case, you might have to run your test via a debugger.
 
-Now, if the problem is that the unit tests are using resources that can not be easily inspected (random numbers, for example), then they are most likely _not_ unit tests, but rather integration tests. You should refactor them to take well-know numbers instead.
+Now, if the problem is that the unit tests are using resources that can not be easily inspected (random numbers, for example), then they are most likely _not_ unit tests, but rather integration tests. You should refactor them to take well-known numbers instead.
 
 
 Avoid descriptions in assertions
@@ -485,7 +485,7 @@ Today, there is no excuse for clutches like descriptions in your tests. Use spec
 Mock types that you do not control, as a first step
 ---------------------------------------------------
 
-Steve Freeman and Nat Pryce make a compeling case that you should only [mock types that you own](http://www.mockobjects.com/2008/11/only-mock-types-you-own-revisited.html). Although the reasoning is right, I do not feel this is the simplest possible thing.
+Steve Freeman and Nat Pryce make a compeling case that you should only [mock types that you own](http://www.mockobjects.com/2008/11/only-mock-types-you-own-revisited.html). Although the reasoning is right, I do not feel this is the simplest possible approach.
 
 My approach is to mock even classes that I do not own. That is, I have no problem with injecting my services with objects external to the source code directly under my control.
 
@@ -512,7 +512,7 @@ I also mock external services. In this example, mocking the central class from M
         verify(mapper).addMappedClass(Purchase.class);
     }
 
-However, in practice, it turns out that this sort of situation is a lot less common than it seems. Also, it often turns out that I end up introducing intermediate classes between my services and external classes. In the first example listed here, the store ended up taking only "LocalFiles" in parameter, an immutable class that contained only the information useful for the rest of the application.
+However, in practice, it turns out that this sort of situation is a lot less common than might be expected. Also, it often turns out that I end up introducing intermediate classes between my services and external classes. In the first example listed here, the store ended up taking only "LocalFiles" in parameter, an immutable class that contained only the information useful for the rest of the application.
 
     public void should_find_only_text_files_in_the_specified_directory() {
         assertThat(store.list(new LocalFile().withFiles("readme.txt", "foobar"))).contains("readme.txt");
@@ -557,7 +557,7 @@ This class can usually be injected automatically by Spring or Guice. Or, as I of
 
 I often end with almost one wrapper class per helper class, especially those from Apache Commons: IOUtils, SystemUtils, StringUtils... My wrapper classes generally have the same name as their external counterparts, making it easier to find them.
 
-Should you test your wrapper classes? My advise is to make them so simple that testing should not be necessary.
+Should you test your wrapper classes? My advise is to make them so simple that testing is not necessary.
 
 
 Use factories to mock classes instantiated in production code
@@ -565,9 +565,9 @@ Use factories to mock classes instantiated in production code
 
 Instantiating things in your production code is usually not a problem. You instantiate a new object, manipulate it, and use its result (or send it to another service). Reasonably easy to test.
 
-Sometimes, the object is more complex. Maybe you need information from the filesystem and you are instantiating Files. Maybe you are using a scheduling library that runs tasks at specific intervals (and instantiating the scheduler puts all sorts of things in movement). It might be cleaner to wrap them all with your own classes, but you want to know more before doing so.
+Sometimes, the object is more complex. Maybe you need information from the filesystem and you are instantiating Files. Maybe you are using a scheduling library that runs tasks at specific intervals (and instantiating the scheduler puts all sorts of things in motion). It might be cleaner to wrap them all with your own classes, but you want to know more before doing so.
 
-In those situations, I usually start by extract the instantiation code in a local method, and override this method in the unit tests:
+In those situations, I usually start by extracting the instantiation code into a local method, and override this method in the unit tests:
 
     public void should_save_data_to_the_store_file() {
         final File file = mock(File.class);
@@ -645,17 +645,17 @@ Do not assume or impose that tests be run in a specific order
 
 In the early days in JUnit, many teams I knew were trying to use every feature it provided (it had so few! they must all be have been useful, right?). That meant stuffing tests into "test suites". This was a pain because it was all too easy to forget to update the suite after a new test had been created. It was also too tempting to comment out a failing test, only to forget to uncomment it after fixing it.
 
-Worst is that it tempted developers to write tests that were expecting to be run in a certain order. For example, one test would populate the database, the following would check that a search was possible, and the last would check that deletion would work. In other words, those tests would be largely interdependent, difficult to parallelize, difficult to maintain (are you sure the 'delete' test has actually removed something? or was it that the other test just never properly populate the database?).
+Worst is that it tempted developers to write tests that were expecting to be run in a certain order. For example, one test would populate the database, the next would check that a search was possible, and the last would check that deletion would work. In other words, those tests would be largely interdependent, difficult to parallelize, difficult to maintain (are you sure the 'delete' test has actually removed something? or was it that the other test just never properly populated the database?).
 
-My advice is to stop relying on such mecanism. Do not assume that tests will be run in a specific order. This will help you make them as independent of each other as possible. Which will also put pressure towards writing production code in small, independent modules.
+My advice is to stop relying on such mechanism. Do not assume that tests will be run in a specific order. This will help you make them as independent of each other as possible. This will also put pressure towards writing production code in small, independent modules.
 
 
 Aim for symetry between test methods
 ------------------------------------
 
-Symetry is a powerful means to push towards better design. Is one of your public API method in production different from the other methods in the same class? Maybe it should be moved to another place.
+Symmetry is a powerful means to push towards better design. Is one of your public API methods in production different from the other methods in the same class? Maybe it should be moved to another place.
 
-Similarly, I like to keep my test methods similar. If one or two of them are different from the others, it makes my test uglier. It is also probably a sign that you need to refactor your production code.
+In the same way, I like to keep my test methods similar. If one or two of them are different from the others, it makes my test uglier. It is also probably a sign that you need to refactor your production code.
 
     @Test
     public void should_update_point_of_interest_with_new_data()
@@ -697,7 +697,7 @@ Similarly, I like to keep my test methods similar. If one or two of them are dif
 What about functional tests?
 ----------------------------
 
-All those rules apply to functional tests. That said, performance costs are greater for functional tests, as servers are started, test data are populated, etc.
+All these rules apply to functional tests. That said, performance costs are greater for functional tests, as servers are started, test data are populated, etc.
 
 However, keeping those rules in mind helps me design tests that are easier to read and maintain. Often, I start by applying them strictly, particularly at the beginning of a project, and only slowly relax them as I have no choice but to speed up the build process to keep it under an acceptable duration.
 
