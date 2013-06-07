@@ -207,7 +207,7 @@ Found it? This is rather subtle. You see, the @Mock annotation, as expected, ass
 
 A fix is to introduce an @Before method (four lines of code in this case). Another is to use yet another annotation, @InjectMocks, on the instance variable representing our class under test. However, this also comes with its own set of quirks and limitations (among other things, it will fail silently if you do not remove the call to the constructor; it will guess, and sometimes fail to guess, what parameters to pass to the constructor; it will guess, and sometimes fail to guess, which constructor to use; it will pass a null value when the dependency is not provided, etc). This is sufficently unexpected to be the origin of a good proportion of the requests for help on the Mockito mailing list. My answer is almost always to [avoid all those annotations altogether](https://groups.google.com/d/topic/mockito/Kik9Pt3kW6k/discussion).
 
-These problems are not due to Mockito itself. They are technical limitation from the Java environment. However, other annotations, at the very best, tend to make their intentions unclear. The @Rule annotation from JUnit 4.7 *XXXXXXXXXXXXXXXXXcheckXXXXXXXXXXXXXXX*, for example, is presented (by Kent Beck, no less) as a good way to create resources in a safe manner before a test method is called and, more importantly, close them cleanly (in effect partly replacing the need for @Before/@After methods). However, few people find this easy to understand. @Before/@After methods are probably the more intuitive way to go in general, especially for newcomers to the code base.
+These problems are not due to Mockito itself. They are technical limitation from the Java environment. However, other annotations, at the very best, tend to make their intentions unclear. The [@Rule annotation from JUnit](https://github.com/junit-team/junit/wiki/Rules), for example, is presented as a good way to create resources in a safe manner before a test method is called and, more importantly, close them cleanly, in effect partly replacing the need for @Before/@After methods. However, few people find this easy to understand. @Before/@After methods are probably the more intuitive way to go in general, especially for newcomers to the code base.
 
 There are other examples, such as SpringJUnit4ClassRunner from Spring Framework or RestFuse for testing HTTP APIs. They all suffer from some limitation in my view. Either they require the usage of additional annotations on top of the main one, or their behavior is difficult to understand, or they place limitations on how you can write your tests, or, simply, hide things that might be useful to see directly from within your tests.
 
@@ -719,7 +719,3 @@ All these rules apply to functional tests. That said, performance costs are grea
 
 However, keeping those rules in mind helps me design tests that are easier to read and maintain. Often, I start by applying them strictly, particularly at the beginning of a project, and only slowly relax them as I have no choice but to speed up the build process to keep it under an acceptable duration.
 
-
-TODO:
-
-* "Write self-verifying tests": your assertion values should be independent from your test values (ie. changing your test values should always fail, because your assertion values be have caught the change; and vice-versa)
