@@ -15,7 +15,9 @@ In production code, common coding standards for Java recommend writing method na
     retrieveUserDetails()
     createABankAccount()
 
-This makes sense when those methods are called from our own code. It feels as if requests are being made to these objects (dear "bankTeller.createABankAccount()", please). However, methods in unit tests are not called by us. They do not need to represent requests. They do need to tell a story, and this story is best told using underscore.
+This makes sense when those methods are called from our own code. It feels as if requests are being made to these objects (dear "bankTeller.createABankAccount()", please). Besides, it follows the conventions in the Java Development Kit and with other projects, making it easy for newcomers to feel at home.
+
+However, methods in unit tests are not called by us. They do not need to represent requests. They also have less pressure to look similar to other public APIs. They do need to tell a story, and a story is best told with space between words. We cannot put spaces in method names, but underscores come close.
 
     should_search_by_name_address()
     cannot_fail_when_address_is_not_specified()
